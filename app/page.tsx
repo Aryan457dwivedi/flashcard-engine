@@ -58,17 +58,16 @@ export default function Home() {
         @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap');
 
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        html { color-scheme: dark; }
+        html { color-scheme: light; }
 
         body {
-          background: #0a0a0f;
-          color: #f9f5fd;
+          background: #f5f4f0;
+          color: #1a1a2e;
           font-family: 'Inter', sans-serif;
           min-height: 100dvh;
           -webkit-font-smoothing: antialiased;
           background-image:
-            radial-gradient(ellipse 80% 50% at 50% -10%, rgba(159,167,255,0.12) 0%, transparent 70%),
-            radial-gradient(ellipse 50% 40% at 80% 80%, rgba(120,100,255,0.07) 0%, transparent 60%);
+            radial-gradient(ellipse 80% 50% at 50% -10%, rgba(120,110,255,0.06) 0%, transparent 70%);
         }
 
         /* Top Bar */
@@ -81,20 +80,19 @@ export default function Home() {
           grid-template-columns: 1fr auto 1fr;
           align-items: center;
           padding: 0 36px;
-          background: rgba(10,10,15,0.75);
+          background: rgba(245,244,240,0.85);
           backdrop-filter: blur(32px);
           -webkit-backdrop-filter: blur(32px);
-          border-bottom: 1px solid rgba(159,167,255,0.07);
-          box-shadow: 0 1px 0 rgba(0,0,0,0.4), 0 4px 24px rgba(0,0,0,0.2);
+          border-bottom: 1px solid rgba(120,110,255,0.1);
+          box-shadow: 0 1px 0 rgba(0,0,0,0.05), 0 4px 24px rgba(0,0,0,0.06);
         }
 
-        /* subtle top glow line */
         .top-bar::before {
           content: '';
           position: absolute;
           top: 0; left: 15%; right: 15%;
           height: 1px;
-          background: linear-gradient(90deg, transparent, rgba(159,167,255,0.35), transparent);
+          background: linear-gradient(90deg, transparent, rgba(120,110,255,0.2), transparent);
           pointer-events: none;
         }
 
@@ -113,15 +111,16 @@ export default function Home() {
           justify-self: start;
         }
 
-        /* Nav links — centred via grid middle column */
+        /* Nav links */
         .nav-links {
           display: flex;
           align-items: center;
           gap: 2px;
-          background: rgba(255,255,255,0.03);
-          border: 1px solid rgba(255,255,255,0.07);
+          background: rgba(255,255,255,0.7);
+          border: 1px solid rgba(120,110,255,0.12);
           border-radius: 999px;
           padding: 5px;
+          box-shadow: 0 1px 4px rgba(0,0,0,0.06);
         }
 
         .nav-btn {
@@ -134,23 +133,21 @@ export default function Home() {
           font-family: 'Inter', sans-serif;
           font-size: 13px;
           font-weight: 500;
-          color: rgba(249,245,253,0.45);
+          color: rgba(26,26,46,0.45);
           letter-spacing: 0.01em;
           transition: color 0.2s ease, background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
           overflow: hidden;
           white-space: nowrap;
         }
 
-        /* shimmer layer on hover */
         .nav-btn::before {
           content: '';
           position: absolute;
           inset: 0;
           border-radius: 999px;
           background: linear-gradient(135deg,
-            rgba(159,167,255,0.18) 0%,
-            rgba(120,100,255,0.10) 50%,
-            rgba(159,167,255,0.05) 100%
+            rgba(91,91,214,0.1) 0%,
+            rgba(123,104,238,0.06) 100%
           );
           opacity: 0;
           transition: opacity 0.2s ease;
@@ -158,49 +155,82 @@ export default function Home() {
         }
 
         .nav-btn:hover::before { opacity: 1; }
-
         .nav-btn:hover {
-          color: rgba(249,245,253,0.92);
+          color: rgba(26,26,46,0.85);
           transform: translateY(-1px);
         }
 
         .nav-btn.active {
-          color: #c4c9ff;
+          color: #5b5bd6;
           background: linear-gradient(135deg,
-            rgba(159,167,255,0.22) 0%,
-            rgba(120,100,255,0.16) 100%
+            rgba(91,91,214,0.12) 0%,
+            rgba(123,104,238,0.08) 100%
           );
           box-shadow:
-            0 0 0 1px rgba(159,167,255,0.2),
-            0 2px 12px rgba(159,167,255,0.15),
-            inset 0 1px 0 rgba(255,255,255,0.1);
+            0 0 0 1px rgba(91,91,214,0.15),
+            0 2px 8px rgba(91,91,214,0.1),
+            inset 0 1px 0 rgba(255,255,255,0.6);
         }
 
         .nav-btn.active::before { opacity: 0; }
-
         .nav-btn:active { transform: scale(0.96) translateY(0); }
-
         .nav-btn.disabled {
-          opacity: 0.22;
+          opacity: 0.3;
           cursor: not-allowed;
           pointer-events: none;
         }
 
-        /* right side spacer so logo stays left, nav stays centre */
+        /* Right side */
         .nav-right {
           justify-self: end;
           display: flex;
           align-items: center;
-          gap: 12px;
+          gap: 10px;
         }
 
-        /* version badge */
+        /* Search pill */
+        .search-pill {
+          display: flex;
+          align-items: center;
+          gap: 7px;
+          background: rgba(255,255,255,0.8);
+          border: 1px solid rgba(120,110,255,0.15);
+          border-radius: 999px;
+          padding: 6px 14px;
+          box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+          transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .search-pill:focus-within {
+          border-color: rgba(91,91,214,0.4);
+          box-shadow: 0 0 0 3px rgba(91,91,214,0.08), 0 1px 4px rgba(0,0,0,0.06);
+        }
+
+        .search-icon {
+          color: rgba(26,26,46,0.3);
+          flex-shrink: 0;
+          pointer-events: none;
+        }
+
+        .search-input {
+          border: none;
+          outline: none;
+          background: transparent;
+          font-family: 'Inter', sans-serif;
+          font-size: 13px;
+          color: #1a1a2e;
+          width: 140px;
+        }
+
+        .search-input::placeholder { color: rgba(26,26,46,0.35); }
+
+        /* Version badge */
         .version-badge {
           font-size: 11px;
           font-weight: 500;
-          color: rgba(159,167,255,0.5);
-          background: rgba(159,167,255,0.08);
-          border: 1px solid rgba(159,167,255,0.12);
+          color: rgba(91,91,214,0.7);
+          background: rgba(91,91,214,0.08);
+          border: 1px solid rgba(91,91,214,0.15);
           border-radius: 999px;
           padding: 3px 10px;
           letter-spacing: 0.03em;
@@ -215,7 +245,7 @@ export default function Home() {
         .inner {
           max-width: 860px;
           margin: 0 auto;
-          padding: 48px 24px 80px;
+          padding: 28px 24px 80px;
         }
       `}</style>
 
@@ -246,8 +276,14 @@ export default function Home() {
           })}
         </nav>
 
-        {/* Right — version badge */}
+        {/* Right — search + version badge */}
         <div className="nav-right">
+          <div className="search-pill">
+            <svg className="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input className="search-input" placeholder="Search decks..." />
+          </div>
           <span className="version-badge">Beta</span>
         </div>
 
