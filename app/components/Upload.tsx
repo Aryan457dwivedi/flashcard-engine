@@ -51,40 +51,31 @@ export default function Upload({ onDeckCreated }: { onDeckCreated: (deck: Deck) 
     <div className="fade-up">
 
       {/* Hero */}
-      <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
-        <div style={{
-          display: 'inline-block',
-          background: 'rgba(99,102,241,0.12)',
-          border: '1px solid rgba(99,102,241,0.25)',
-          borderRadius: '100px',
-          padding: '0.4rem 1.1rem',
-          fontSize: '0.8rem',
-          color: '#818cf8',
-          fontWeight: '500',
-          letterSpacing: '0.5px',
-          marginBottom: '1.5rem',
-          textTransform: 'uppercase'
-        }}>
-          AI-Powered Study Tool
-        </div>
+      <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
         <h1 style={{
           fontSize: 'clamp(2.2rem, 5vw, 3.5rem)',
           fontWeight: '800',
           lineHeight: '1.1',
           letterSpacing: '-1px',
           marginBottom: '1.25rem',
-          color: '#ffffff'
+          color: '#1a1a2e',
         }}>
           Turn any PDF into<br />
           <span style={{
             background: 'linear-gradient(90deg, #6366f1, #a78bfa)',
             WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent'
+            WebkitTextFillColor: 'transparent',
           }}>
             smart flashcards
           </span>
         </h1>
-        <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '1.1rem', maxWidth: '480px', margin: '0 auto', lineHeight: '1.6' }}>
+        <p style={{
+          color: 'rgba(26,26,46,0.5)',
+          fontSize: '1.05rem',
+          maxWidth: '480px',
+          margin: '0 auto',
+          lineHeight: '1.6',
+        }}>
           Upload your notes, textbooks, or study material. Get back a complete deck ready to practice with spaced repetition.
         </p>
       </div>
@@ -96,15 +87,16 @@ export default function Upload({ onDeckCreated }: { onDeckCreated: (deck: Deck) 
         onDrop={(e) => { e.preventDefault(); setDragging(false); handleFile(e.dataTransfer.files[0]); }}
         onClick={() => !loading && document.getElementById('fileInput')?.click()}
         style={{
-          border: `2px dashed ${dragging ? '#6366f1' : 'rgba(255,255,255,0.1)'}`,
+          border: `2px dashed ${dragging ? '#6366f1' : 'rgba(99,102,241,0.2)'}`,
           borderRadius: '20px',
           padding: '4rem 2rem',
           textAlign: 'center',
           cursor: loading ? 'default' : 'pointer',
-          background: dragging ? 'rgba(99,102,241,0.06)' : 'rgba(255,255,255,0.02)',
+          background: dragging ? 'rgba(99,102,241,0.05)' : 'rgba(255,255,255,0.6)',
           transition: 'all 0.2s',
           maxWidth: '600px',
           margin: '0 auto 2rem',
+          boxShadow: '0 2px 16px rgba(0,0,0,0.06)',
         }}
       >
         {loading ? (
@@ -112,14 +104,18 @@ export default function Upload({ onDeckCreated }: { onDeckCreated: (deck: Deck) 
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.25rem' }}>
               <div className="spinner" style={{ width: '36px', height: '36px' }}></div>
             </div>
-            <p style={{ color: '#818cf8', fontWeight: '600', fontSize: '1rem', marginBottom: '0.5rem' }}>Generating flashcards...</p>
-            <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.875rem' }}>This usually takes 20–30 seconds</p>
+            <p style={{ color: '#6366f1', fontWeight: '600', fontSize: '1rem', marginBottom: '0.5rem' }}>
+              Generating flashcards...
+            </p>
+            <p style={{ color: 'rgba(26,26,46,0.4)', fontSize: '0.875rem' }}>
+              This usually takes 20–30 seconds
+            </p>
           </div>
         ) : (
           <div>
             <div style={{
               width: '56px', height: '56px',
-              background: 'rgba(99,102,241,0.12)',
+              background: 'rgba(99,102,241,0.1)',
               borderRadius: '14px',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               margin: '0 auto 1.25rem',
@@ -130,36 +126,60 @@ export default function Upload({ onDeckCreated }: { onDeckCreated: (deck: Deck) 
                 <line x1="12" y1="3" x2="12" y2="15"/>
               </svg>
             </div>
-            <p style={{ color: '#ffffff', fontWeight: '600', fontSize: '1rem', marginBottom: '0.4rem' }}>Drop your PDF here</p>
-            <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.875rem' }}>or click to browse files</p>
+            <p style={{ color: '#1a1a2e', fontWeight: '600', fontSize: '1rem', marginBottom: '0.4rem' }}>
+              Drop your PDF here
+            </p>
+            <p style={{ color: 'rgba(26,26,46,0.4)', fontSize: '0.875rem' }}>
+              or click to browse files
+            </p>
           </div>
         )}
       </div>
 
-      <input id="fileInput" type="file" accept=".pdf" style={{ display: 'none' }} onChange={(e) => e.target.files && handleFile(e.target.files[0])} />
+      <input
+        id="fileInput"
+        type="file"
+        accept=".pdf"
+        style={{ display: 'none' }}
+        onChange={(e) => e.target.files && handleFile(e.target.files[0])}
+      />
 
       {error && (
-        <p style={{ textAlign: 'center', color: '#f87171', fontSize: '0.875rem', marginBottom: '2rem' }}>{error}</p>
+        <p style={{ textAlign: 'center', color: '#dc2626', fontSize: '0.875rem', marginBottom: '2rem' }}>
+          {error}
+        </p>
       )}
 
       {/* Feature Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', maxWidth: '600px', margin: '0 auto' }}>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, 1fr)',
+        gap: '1rem',
+        maxWidth: '600px',
+        margin: '0 auto',
+      }}>
         {[
           ['Smart Extraction', 'Gemini AI identifies key concepts, definitions, and relationships from your material.'],
           ['Spaced Repetition', 'The SM-2 algorithm surfaces hard cards more often so you learn faster.'],
           ['Track Mastery', 'See exactly what you know, what needs work, and what is coming up for review.'],
         ].map(([title, desc]) => (
           <div key={title} style={{
-            background: 'rgba(255,255,255,0.03)',
-            border: '1px solid rgba(255,255,255,0.07)',
+            background: 'rgba(255,255,255,0.7)',
+            border: '1px solid rgba(99,102,241,0.12)',
             borderRadius: '14px',
             padding: '1.25rem',
+            boxShadow: '0 1px 6px rgba(0,0,0,0.05)',
           }}>
-            <p style={{ fontWeight: '600', fontSize: '0.875rem', marginBottom: '0.5rem', color: '#fff' }}>{title}</p>
-            <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.8rem', lineHeight: '1.5' }}>{desc}</p>
+            <p style={{ fontWeight: '600', fontSize: '0.875rem', marginBottom: '0.5rem', color: '#1a1a2e' }}>
+              {title}
+            </p>
+            <p style={{ color: 'rgba(26,26,46,0.45)', fontSize: '0.8rem', lineHeight: '1.5' }}>
+              {desc}
+            </p>
           </div>
         ))}
       </div>
+
     </div>
   );
 }
