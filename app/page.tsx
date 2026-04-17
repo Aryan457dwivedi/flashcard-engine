@@ -80,7 +80,7 @@ export default function Home() {
         }
 
         body {
-          background: #f0efe9;
+          background: #e8e7e0;
           color: #1a1a2e;
           font-family: 'Inter', sans-serif;
           min-height: 100dvh;
