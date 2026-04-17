@@ -349,7 +349,7 @@ export default function Home() {
       <div className="page-glow" aria-hidden="true" />
 
       <header className="top-bar">
-        <div className="logo" onClick={() => setScreen('home')}>Lumora</div>
+        <div className="logo" onClick={() => setScreen('home')}>Lumora.</div>
 
         <nav className="nav-links">
           {NAV_ITEMS.map(({ screen: s, label }) => {
