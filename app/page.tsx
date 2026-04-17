@@ -1,5 +1,9 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
+import Upload from './components/Upload';
+import Decks from './components/Decks';
+import Practice from './components/Practice';
+import Dashboard from './components/Dashboard';
 
 interface Card {
   question: string;
@@ -16,221 +20,465 @@ interface Deck {
   created: string;
 }
 
-// ── TextGenerateEffect ──────────────────────────────────────────
-type TGEProps = {
-  words: string;
-  filter?: boolean;
-  duration?: number;
-  stagger?: number;
-};
+const NAV_ITEMS: { screen: string; label: string }[] = [
+  { screen: 'home',      label: 'Upload'   },
+  { screen: 'decks',     label: 'Library'  },
+  { screen: 'practice',  label: 'Practice' },
+  { screen: 'dashboard', label: 'Stats'    },
+];
 
-function TextGenerateEffect({ words, filter = true, duration = 0.5, stagger = 0.2 }: TGEProps) {
-  const wordsArray = words.split(' ');
-  const [visibleCount, setVisibleCount] = useState(0);
-  const timers = useRef<number[]>([]);
+export default function Home() {
+  const [screen, setScreen] = useState('home');
+  const [decks, setDecks] = useState<Deck[]>([]);
+  const [activeDeck, setActiveDeck] = useState<Deck | null>(null);
+  const [hoveredNav, setHoveredNav] = useState<string | null>(null);
 
-  useEffect(() => {
-    timers.current.forEach((t) => window.clearTimeout(t));
-    timers.current = [];
-    setVisibleCount(0);
-    wordsArray.forEach((_, i) => {
-      const t = window.setTimeout(() => {
-        setVisibleCount((c) => Math.max(c, i + 1));
-      }, i * stagger * 1000);
-      timers.current.push(t);
-    });
-    return () => { timers.current.forEach((t) => window.clearTimeout(t)); };
-  }, [words, stagger]);
+  const addDeck = (deck: Deck) => {
+    setDecks(prev => [...prev, deck]);
+    setScreen('decks');
+  };
+
+  const updateDeck = (updatedDeck: Deck) => {
+    setDecks(prev => prev.map(d => d.id === updatedDeck.id ? updatedDeck : d));
+  };
+
+  const startPractice = (deck: Deck) => {
+    setActiveDeck(deck);
+    setScreen('practice');
+  };
+
+  const handleNavClick = (s: string) => {
+    if (s === 'practice' && !activeDeck) return;
+    setScreen(s);
+  };
 
   return (
     <>
-      {wordsArray.map((word, idx) => {
-        const shown = idx < visibleCount;
-        return (
-          <span
-            key={word + idx}
-            style={{
-              display: 'inline-block',
-              opacity: shown ? 1 : 0,
-              filter: filter ? (shown ? 'blur(0px)' : 'blur(10px)') : 'none',
-              transition: `opacity ${duration}s ease, filter ${duration}s ease`,
-              marginRight: '0.28em',
-            }}
-          >
-            {word}
-          </span>
-        );
-      })}
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap');
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { color-scheme: light; }
+
+        @keyframes shimmer-x {
+          0%   { background-position: -200% center; }
+          100% { background-position:  200% center; }
+        }
+        @keyframes orb-a {
+          0%,100% { transform: translate(0,0) scale(1); }
+          40%     { transform: translate(20px,-14px) scale(1.05); }
+          70%     { transform: translate(-10px, 8px) scale(0.97); }
+        }
+        @keyframes orb-b {
+          0%,100% { transform: translate(0,0) scale(1); }
+          35%     { transform: translate(-24px,16px) scale(1.06); }
+          65%     { transform: translate(12px,-6px) scale(0.95); }
+        }
+        @keyframes orb-c {
+          0%,100% { transform: translate(0,0); }
+          50%     { transform: translate(10px, 22px); }
+        }
+
+        body {
+          background: #e8e7e0;
+          color: #1a1a2e;
+          font-family: 'Inter', sans-serif;
+          min-height: 100dvh;
+          -webkit-font-smoothing: antialiased;
+          overflow-x: hidden;
+        }
+
+        body::before {
+          content: '';
+          position: fixed;
+          width: 760px; height: 540px;
+          top: -220px; left: -160px;
+          border-radius: 50%;
+          background: radial-gradient(ellipse at 38% 38%,
+            rgba(99,88,240,0.20) 0%,
+            rgba(120,100,255,0.11) 30%,
+            rgba(91,91,214,0.05) 58%,
+            transparent 78%
+          );
+          filter: blur(64px);
+          pointer-events: none;
+          z-index: 0;
+          animation: orb-a 16s ease-in-out infinite;
+        }
+
+        body::after {
+          content: '';
+          position: fixed;
+          width: 560px; height: 420px;
+          bottom: -150px; right: -90px;
+          border-radius: 50%;
+          background: radial-gradient(ellipse at 60% 60%,
+            rgba(110,85,245,0.13) 0%,
+            rgba(91,91,214,0.06) 48%,
+            transparent 74%
+          );
+          filter: blur(60px);
+          pointer-events: none;
+          z-index: 0;
+          animation: orb-b 20s ease-in-out infinite;
+        }
+
+        .page-glow {
+          position: fixed;
+          top: 44%; left: 50%;
+          transform: translate(-50%, -50%);
+          width: 720px; height: 480px;
+          border-radius: 50%;
+          background: radial-gradient(ellipse at 50% 50%,
+            rgba(91,91,214,0.065) 0%,
+            rgba(120,110,255,0.030) 42%,
+            transparent 68%
+          );
+          filter: blur(44px);
+          pointer-events: none;
+          z-index: 0;
+          animation: orb-c 24s ease-in-out infinite;
+        }
+
+        .top-bar {
+          position: fixed;
+          top: 0; left: 0; right: 0;
+          z-index: 50;
+          height: 68px;
+          display: grid;
+          grid-template-columns: 1fr auto 1fr;
+          align-items: center;
+          padding: 0 36px;
+          background: rgba(240,239,233,0.55);
+          backdrop-filter: blur(48px) saturate(200%) brightness(1.02);
+          -webkit-backdrop-filter: blur(48px) saturate(200%) brightness(1.02);
+          border-bottom: 1px solid rgba(91,91,214,0.08);
+          box-shadow:
+            0 1px 0 rgba(255,255,255,0.9),
+            0 4px 40px rgba(91,91,214,0.07),
+            0 1px 3px rgba(0,0,0,0.04);
+          isolation: isolate;
+        }
+
+        /* Vercel-signature glow seam */
+        .top-bar::before {
+          content: '';
+          position: absolute;
+          top: 0; left: 8%; right: 8%;
+          height: 1px;
+          background: linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(140,120,255,0.18) 15%,
+            rgba(100,90,255,0.55) 38%,
+            rgba(91,91,214,0.82) 50%,
+            rgba(100,90,255,0.55) 62%,
+            rgba(140,120,255,0.18) 85%,
+            transparent 100%
+          );
+          pointer-events: none;
+        }
+
+        /* Bloom above the seam */
+        .top-bar::after {
+          content: '';
+          position: absolute;
+          top: -32px; left: 50%;
+          transform: translateX(-50%);
+          width: 560px; height: 64px;
+          background: radial-gradient(ellipse at 50% 100%,
+            rgba(91,91,214,0.20) 0%,
+            rgba(110,100,255,0.08) 45%,
+            transparent 70%
+          );
+          filter: blur(12px);
+          pointer-events: none;
+        }
+
+        .logo {
+          font-family: 'Space Grotesk', sans-serif;
+          font-weight: 900;
+          font-size: 22px;
+          letter-spacing: -0.5px;
+          cursor: pointer;
+          user-select: none;
+          color: #0a0a0a;
+          justify-self: start;
+        }
+
+        .nav-links {
+          display: flex;
+          align-items: center;
+          gap: 2px;
+          background: rgba(255,255,255,0.78);
+          border: 1px solid rgba(91,91,214,0.12);
+          border-radius: 999px;
+          padding: 5px;
+          box-shadow:
+            0 1px 4px rgba(0,0,0,0.06),
+            0 0 0 1px rgba(255,255,255,0.7) inset,
+            0 2px 16px rgba(91,91,214,0.05);
+        }
+
+        .nav-btn {
+          position: relative;
+          padding: 7px 20px;
+          border-radius: 999px;
+          border: none;
+          background: transparent;
+          cursor: pointer;
+          font-family: 'Inter', sans-serif;
+          font-size: 13px;
+          font-weight: 500;
+          color: rgba(26,26,46,0.42);
+          letter-spacing: 0.01em;
+          transition: color 0.18s, background 0.18s, transform 0.14s, box-shadow 0.18s;
+          white-space: nowrap;
+          overflow: hidden;
+        }
+
+        .nav-btn::before {
+          content: '';
+          position: absolute; inset: 0;
+          border-radius: 999px;
+          background: linear-gradient(135deg,
+            rgba(91,91,214,0.10) 0%,
+            rgba(123,104,238,0.05) 100%
+          );
+          opacity: 0;
+          transition: opacity 0.18s;
+          pointer-events: none;
+        }
+
+        .nav-btn:hover::before { opacity: 1; }
+        .nav-btn:hover { color: rgba(26,26,46,0.82); transform: translateY(-1px); }
+
+        .nav-btn.active {
+          color: #5b5bd6;
+          background: linear-gradient(135deg,
+            rgba(91,91,214,0.13) 0%,
+            rgba(120,100,240,0.08) 100%
+          );
+          box-shadow:
+            0 0 0 1px rgba(91,91,214,0.22),
+            0 2px 12px rgba(91,91,214,0.14),
+            0 0 24px rgba(91,91,214,0.07),
+            inset 0 1px 0 rgba(255,255,255,0.78);
+        }
+
+        .nav-btn.active::before { opacity: 0; }
+        .nav-btn:active { transform: scale(0.96) translateY(0); }
+        .nav-btn.disabled { opacity: 0.28; cursor: not-allowed; pointer-events: none; }
+
+        .nav-right {
+          justify-self: end;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .search-pill {
+          display: flex;
+          align-items: center;
+          gap: 7px;
+          background: rgba(255,255,255,0.82);
+          border: 1px solid rgba(91,91,214,0.12);
+          border-radius: 999px;
+          padding: 6px 14px;
+          box-shadow:
+            0 1px 3px rgba(0,0,0,0.05),
+            inset 0 1px 0 rgba(255,255,255,0.95);
+          transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .search-pill:focus-within {
+          border-color: rgba(91,91,214,0.38);
+          box-shadow:
+            0 0 0 3px rgba(91,91,214,0.09),
+            0 0 18px rgba(91,91,214,0.09),
+            inset 0 1px 0 rgba(255,255,255,0.95);
+        }
+        .search-icon { color: rgba(26,26,46,0.28); flex-shrink: 0; pointer-events: none; }
+        .search-input {
+          border: none; outline: none;
+          background: transparent;
+          font-family: 'Inter', sans-serif;
+          font-size: 13px; color: #1a1a2e;
+          width: 140px;
+        }
+        .search-input::placeholder { color: rgba(26,26,46,0.33); }
+
+        .version-badge {
+          position: relative;
+          font-size: 11px; font-weight: 600;
+          color: #5b5bd6;
+          background: rgba(91,91,214,0.08);
+          border: 1px solid rgba(91,91,214,0.20);
+          border-radius: 999px;
+          padding: 3px 10px;
+          letter-spacing: 0.05em;
+          user-select: none;
+          overflow: hidden;
+        }
+        .version-badge::after {
+          content: '';
+          position: absolute; inset: 0;
+          border-radius: 999px;
+          background: linear-gradient(105deg,
+            transparent 25%,
+            rgba(255,255,255,0.65) 50%,
+            transparent 75%
+          );
+          background-size: 200% 100%;
+          animation: shimmer-x 3.2s ease-in-out infinite;
+          pointer-events: none;
+        }
+
+        .main-wrap {
+          padding-top: 68px;
+          min-height: 100dvh;
+          position: relative;
+          z-index: 1;
+        }
+        .inner {
+          max-width: 860px;
+          margin: 0 auto;
+          padding: 28px 24px 80px;
+        }
+      `}</style>
+
+      <div className="page-glow" aria-hidden="true" />
+
+      <header className="top-bar">
+        <div className="logo" onClick={() => setScreen('home')}>Lumora.</div>
+
+        <nav className="nav-links">
+          {NAV_ITEMS.map(({ screen: s, label }) => {
+            const isActive = screen === s;
+            const isDisabled = s === 'practice' && !activeDeck;
+            return (
+              <button
+                key={s}
+                className={`nav-btn${isActive ? ' active' : ''}${isDisabled ? ' disabled' : ''}`}
+                onClick={() => handleNavClick(s)}
+                onMouseEnter={() => setHoveredNav(s)}
+                onMouseLeave={() => setHoveredNav(null)}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </nav>
+
+        <div className="nav-right">
+          <div className="search-pill">
+            <svg className="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input className="search-input" placeholder="Search decks…" />
+          </div>
+          <span className="version-badge">Beta</span>
+        </div>
+      </header>
+
+      <main className="main-wrap">
+        <div className="inner">
+          {screen === 'home'      && <Upload onDeckCreated={addDeck} />}
+          {screen === 'decks'     && <Decks decks={decks} onPractice={startPractice} />}
+          {screen === 'practice'  && activeDeck && (
+            <Practice
+              deck={activeDeck}
+              onFinish={(updatedDeck: Deck) => {
+                updateDeck(updatedDeck);
+                setScreen('decks');
+              }}
+            />
+          )}
+          {screen === 'dashboard' && <Dashboard decks={decks} />}
+        </div>
+      </main>
     </>
   );
 }
 
-// ── Upload ──────────────────────────────────────────────────────
-export default function Upload({ onDeckCreated }: { onDeckCreated: (deck: Deck) => void }) {
-  const [dragging, setDragging] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  const handleFile = async (file: File) => {
-    if (!file || file.type !== 'application/pdf') {
-      setError('Please upload a PDF file');
-      return;
-    }
-    setLoading(true);
-    setError('');
-    const formData = new FormData();
-    formData.append('pdf', file);
-    try {
-      const res = await fetch('/api/generate', { method: 'POST', body: formData });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
-      onDeckCreated({
-        id: Date.now(),
-        name: file.name.replace('.pdf', ''),
-        cards: data.cards,
-        created: new Date().toLocaleDateString(),
-      });
-    } catch {
-      setError('Something went wrong. Please try again.');
-    }
-    setLoading(false);
-  };
-
+/**
+ * DropZoneGrid
+ * ─────────────
+ * Drop this inside your Upload component's drop zone wrapper.
+ *
+ * The wrapper needs:
+ *   position: relative;
+ *   overflow: hidden;
+ *   border-radius: 16px;
+ *
+ * Your content inside the drop zone must have:
+ *   position: relative;
+ *   z-index: 2;
+ *
+ * Usage:
+ *   import { DropZoneGrid } from '../page';
+ *
+ *   <div className="drop-zone">
+ *     <DropZoneGrid />
+ *     <div style={{ position: 'relative', zIndex: 2 }}>
+ *       ... upload UI ...
+ *     </div>
+ *   </div>
+ */
+export function DropZoneGrid() {
   return (
-    <div className="fade-up">
+    <svg
+      style={{
+        position: 'absolute',
+        inset: 0,
+        width: '100%',
+        height: '100%',
+        borderRadius: '14px',
+        pointerEvents: 'none',
+        zIndex: 1,
+      }}
+      viewBox="0 0 600 260"
+      preserveAspectRatio="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <defs>
+        {/*
+          patternUnits="userSpaceOnUse" keeps the 40×40 cell size
+          consistent regardless of how the SVG is scaled.
+          preserveAspectRatio="none" on the root SVG means the grid
+          always fills the drop zone exactly — no matter its size.
+        */}
+        <pattern id="evenGrid" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+          <path d="M40 0L0 0 0 40" fill="none" stroke="rgba(91,91,214,0.13)" strokeWidth="0.8"/>
+        </pattern>
 
-      {/* Hero */}
-      <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-        <h1 style={{
-          fontSize: 'clamp(2.2rem, 5vw, 3.5rem)',
-          fontWeight: '800',
-          lineHeight: '1.1',
-          letterSpacing: '-1px',
-          marginBottom: '1.25rem',
-          color: '#1a1a2e',
-        }}>
-          <TextGenerateEffect
-            words="Turn any PDF into smart flashcards"
-            stagger={0.12}
-            duration={0.5}
-          />
-        </h1>
+        {/* Vignette: grid is crisp in the centre, fades to invisible at all four edges */}
+        <radialGradient id="gridFade" cx="50%" cy="50%" r="58%">
+          <stop offset="0%"   stopColor="white" stopOpacity="1"/>
+          <stop offset="55%"  stopColor="white" stopOpacity="0.72"/>
+          <stop offset="100%" stopColor="white" stopOpacity="0"/>
+        </radialGradient>
+        <mask id="gridMask">
+          <rect width="600" height="260" fill="url(#gridFade)"/>
+        </mask>
+      </defs>
 
-        <p style={{
-          color: 'rgba(26,26,46,0.5)',
-          fontSize: '1.05rem',
-          maxWidth: '480px',
-          margin: '0 auto',
-          lineHeight: '1.6',
-        }}>
-          <TextGenerateEffect
-            words="Upload your notes, textbooks, or study material. Get back a complete deck ready to practice with spaced repetition."
-            stagger={0.04}
-            duration={0.4}
-          />
-        </p>
-      </div>
+      {/* Grid with vignette mask */}
+      <rect width="600" height="260" fill="url(#evenGrid)" mask="url(#gridMask)"/>
 
-      {/* Upload Box */}
-      <div
-        onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
-        onDragLeave={() => setDragging(false)}
-        onDrop={(e) => { e.preventDefault(); setDragging(false); handleFile(e.dataTransfer.files[0]); }}
-        onClick={() => !loading && document.getElementById('fileInput')?.click()}
-        style={{
-          border: `2px dashed ${dragging ? '#6366f1' : 'rgba(99,102,241,0.2)'}`,
-          borderRadius: '20px',
-          padding: '4rem 2rem',
-          textAlign: 'center',
-          cursor: loading ? 'default' : 'pointer',
-          background: dragging ? 'rgba(99,102,241,0.05)' : 'rgba(255,255,255,0.6)',
-          transition: 'all 0.2s',
-          maxWidth: '600px',
-          margin: '0 auto 2rem',
-          boxShadow: '0 2px 16px rgba(0,0,0,0.06)',
-        }}
-      >
-        {loading ? (
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.25rem' }}>
-              <div className="spinner" style={{ width: '36px', height: '36px' }} />
-            </div>
-            <p style={{ color: '#6366f1', fontWeight: '600', fontSize: '1rem', marginBottom: '0.5rem' }}>
-              Generating flashcards…
-            </p>
-            <p style={{ color: 'rgba(26,26,46,0.4)', fontSize: '0.875rem' }}>
-              This usually takes 20–30 seconds
-            </p>
-          </div>
-        ) : (
-          <div>
-            <div style={{
-              width: '56px', height: '56px',
-              background: 'rgba(99,102,241,0.1)',
-              borderRadius: '14px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              margin: '0 auto 1.25rem',
-            }}>
-              <svg width="24" height="24" fill="none" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="17 8 12 3 7 8"/>
-                <line x1="12" y1="3" x2="12" y2="15"/>
-              </svg>
-            </div>
-            <p style={{ color: '#1a1a2e', fontWeight: '600', fontSize: '1rem', marginBottom: '0.4rem' }}>
-              Drop your PDF here
-            </p>
-            <p style={{ color: 'rgba(26,26,46,0.4)', fontSize: '0.875rem' }}>
-              or click to browse files
-            </p>
-          </div>
-        )}
-      </div>
+      {/* Corner L-bracket accents */}
+      <path d="M0 0 L36 0 M0 0 L0 36"
+        stroke="rgba(91,91,214,0.45)" strokeWidth="1.5" fill="none" strokeLinecap="square"/>
+      <path d="M600 0 L564 0 M600 0 L600 36"
+        stroke="rgba(91,91,214,0.45)" strokeWidth="1.5" fill="none" strokeLinecap="square"/>
+      <path d="M0 260 L36 260 M0 260 L0 224"
+        stroke="rgba(91,91,214,0.45)" strokeWidth="1.5" fill="none" strokeLinecap="square"/>
+      <path d="M600 260 L564 260 M600 260 L600 224"
+        stroke="rgba(91,91,214,0.45)" strokeWidth="1.5" fill="none" strokeLinecap="square"/>
 
-      <input
-        id="fileInput"
-        type="file"
-        accept=".pdf"
-        style={{ display: 'none' }}
-        onChange={(e) => e.target.files && handleFile(e.target.files[0])}
-      />
-
-      {error && (
-        <p style={{ textAlign: 'center', color: '#dc2626', fontSize: '0.875rem', marginBottom: '2rem' }}>
-          {error}
-        </p>
-      )}
-
-      {/* Feature Cards */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
-        gap: '1rem',
-        maxWidth: '600px',
-        margin: '0 auto',
-      }}>
-        {[
-          ['Smart Extraction', 'Gemini AI identifies key concepts, definitions, and relationships from your material.'],
-          ['Spaced Repetition', 'The SM-2 algorithm surfaces hard cards more often so you learn faster.'],
-          ['Track Mastery', 'See exactly what you know, what needs work, and what is coming up for review.'],
-        ].map(([title, desc]) => (
-          <div key={title} style={{
-            background: 'rgba(255,255,255,0.7)',
-            border: '1px solid rgba(99,102,241,0.12)',
-            borderRadius: '14px',
-            padding: '1.25rem',
-            boxShadow: '0 1px 6px rgba(0,0,0,0.05)',
-          }}>
-            <p style={{ fontWeight: '600', fontSize: '0.875rem', marginBottom: '0.5rem', color: '#1a1a2e' }}>
-              {title}
-            </p>
-            <p style={{ color: 'rgba(26,26,46,0.45)', fontSize: '0.8rem', lineHeight: '1.5' }}>
-              {desc}
-            </p>
-          </div>
-        ))}
-      </div>
-
-    </div>
+      {/* Centre crosshair */}
+      <circle cx="300" cy="130" r="1.8" fill="rgba(91,91,214,0.28)"/>
+      <line x1="288" y1="130" x2="312" y2="130" stroke="rgba(91,91,214,0.16)" strokeWidth="1"/>
+      <line x1="300" y1="118" x2="300" y2="142" stroke="rgba(91,91,214,0.16)" strokeWidth="1"/>
+    </svg>
   );
 }
