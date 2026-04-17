@@ -582,7 +582,7 @@ export default function Home() {
           </nav>
         </div>
         <p className="footer-copy">
-          © {new Date().getFullYear()} Lumora. Built with Gemini AI &amp; spaced repetition.
+          © {new Date().getFullYear()} © 2026 Lumora. Enhancing learning through spaced repetition.
         </p>
       </footer>
     </>
