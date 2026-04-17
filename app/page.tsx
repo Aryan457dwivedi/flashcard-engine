@@ -567,7 +567,7 @@ export default function Home() {
             <div className="footer-logo">Lumora.</div>
             <div className="footer-tagline">
               <TextGenerateEffect
-                words="Turn any PDF into smart flashcards"
+                words=".pdf into AI flashcards"
                 duration={0.4}
                 staggerDelay={0.10}
               />
