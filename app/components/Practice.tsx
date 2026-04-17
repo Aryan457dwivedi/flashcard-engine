@@ -19,10 +19,17 @@ interface Deck {
 function sm2(card: Card, quality: number): Card {
   let { ease, interval, reps } = card;
   if (quality >= 3) {
-    if (reps === 0) interval = 1;
-    else if (reps === 1) interval = 6;
-    else interval = Math.round(interval * ease);
-    reps += 1;
+    if (reps === 0) {
+      // First time correct: "Got it!" jumps to mastered (reps=2), "Shaky" stays at learning (reps=1)
+      interval = quality === 5 ? 3 : 1;
+      reps = quality === 5 ? 2 : 1;
+    } else if (reps === 1) {
+      interval = 6;
+      reps = 2;
+    } else {
+      interval = Math.round(interval * ease);
+      reps += 1;
+    }
     ease = ease + 0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02);
     if (ease < 1.3) ease = 1.3;
   } else {
@@ -70,6 +77,8 @@ export default function Practice({
   );
   const [current, setCurrent] = useState(0);
   const [flipped, setFlipped] = useState(false);
+  // Track per-card quality given this session: index -> quality
+  const [sessionRatings, setSessionRatings] = useState<Record<number, number>>({});
   const [session, setSession] = useState({ correct: 0, incorrect: 0 });
   const [animDir, setAnimDir] = useState<'in' | 'out-left' | 'out-right'>('in');
   const [streakFlash, setStreakFlash] = useState(false);
@@ -110,6 +119,7 @@ export default function Practice({
       const updated = [...cards];
       updated[current] = sm2(card, quality);
       setCards(updated);
+      setSessionRatings(prev => ({ ...prev, [current]: quality }));
       setSession(prev => ({
         correct: quality >= 3 ? prev.correct + 1 : prev.correct,
         incorrect: quality < 3 ? prev.incorrect + 1 : prev.incorrect,
@@ -128,9 +138,11 @@ export default function Practice({
   /* ── DONE SCREEN ─────────────────────────────────────────────── */
   if (done) {
     const score = Math.round((session.correct / cards.length) * 100);
-    const mastered = cards.filter(c => c.reps >= 2).length;
-    const shaky = cards.filter(c => c.reps === 1).length;
-    const missed = cards.length - mastered - shaky;
+    // Use session ratings: Got it (5) = mastered, Shaky (3) = shaky, Missed (1) = missed
+    const ratings = Object.values(sessionRatings);
+    const mastered = ratings.filter(q => q === 5).length;
+    const shaky = ratings.filter(q => q === 3).length;
+    const missed = ratings.filter(q => q === 1).length;
     const circ = 2 * Math.PI * 46;
 
     return (
@@ -200,6 +212,7 @@ export default function Practice({
               setCurrent(0);
               setFlipped(false);
               setSession({ correct: 0, incorrect: 0 });
+              setSessionRatings({});
             }}>
               Retry session
             </button>
