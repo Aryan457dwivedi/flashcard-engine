@@ -168,7 +168,7 @@ export default function Home() {
           animation: orb-c 18s ease-in-out infinite 3s;
         }
 
-        /* ── Top bar ───────────────────────────────────────────────── */
+        /* ── Top bar ── */
         .top-bar {
           position: fixed;
           top: 0; left: 0; right: 0;
@@ -222,7 +222,7 @@ export default function Home() {
           pointer-events: none;
         }
 
-        /* ── Logo ──────────────────────────────────────────────────── */
+        /* ── Logo ── */
         .logo {
           font-family: 'Space Grotesk', sans-serif;
           font-weight: 900;
@@ -234,7 +234,7 @@ export default function Home() {
           justify-self: start;
         }
 
-        /* ── Nav ───────────────────────────────────────────────────── */
+        /* ── Nav ── */
         .nav-links {
           display: flex;
           align-items: center;
@@ -299,7 +299,7 @@ export default function Home() {
         .nav-btn:active { transform: scale(0.96) translateY(0); }
         .nav-btn.disabled { opacity: 0.28; cursor: not-allowed; pointer-events: none; }
 
-        /* ── Right side ────────────────────────────────────────────── */
+        /* ── Right side ── */
         .nav-right {
           justify-self: end;
           display: flex;
@@ -363,7 +363,7 @@ export default function Home() {
           pointer-events: none;
         }
 
-        /* ── Layout ────────────────────────────────────────────────── */
+        /* ── Layout ── */
         .main-wrap {
           padding-top: 68px;
           min-height: 100dvh;
@@ -376,15 +376,15 @@ export default function Home() {
           padding: 28px 24px 48px;
         }
 
-        /* ── Footer ────────────────────────────────────────────────── */
+        /* ── Footer ── */
         .site-footer {
           position: relative;
           z-index: 1;
-          border-top: 1px solid rgba(91,91,214,0.10);
-          background: rgba(215,212,205,0.50);
-          backdrop-filter: blur(24px);
-          -webkit-backdrop-filter: blur(24px);
-          padding: 32px 36px 28px;
+          border-top: 1px solid rgba(91,91,214,0.12);
+          background: rgba(200,196,188,0.65);
+          backdrop-filter: blur(32px) saturate(160%);
+          -webkit-backdrop-filter: blur(32px) saturate(160%);
+          padding: 40px 36px 32px;
         }
 
         .footer-inner {
@@ -392,34 +392,43 @@ export default function Home() {
           margin: 0 auto;
           display: grid;
           grid-template-columns: 1fr auto;
-          align-items: center;
-          gap: 16px;
+          align-items: start;
+          gap: 24px;
         }
 
         .footer-logo {
           font-family: 'Space Grotesk', sans-serif;
           font-weight: 900;
-          font-size: 16px;
-          letter-spacing: -0.4px;
+          font-size: 26px;
+          letter-spacing: -0.6px;
           color: #0a0a0a;
-          margin-bottom: 4px;
+          margin-bottom: 7px;
+          line-height: 1;
         }
 
         .footer-tagline {
-          font-size: 12px;
-          color: rgba(26,26,46,0.38);
+          font-size: 13.5px;
+          color: rgba(10,10,10,0.55);
           letter-spacing: 0.01em;
+          font-weight: 400;
         }
 
-        .footer-links {
+        .footer-nav-col {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-end;
+          gap: 14px;
+        }
+
+        .footer-nav-row {
           display: flex;
           align-items: center;
-          gap: 24px;
+          gap: 6px;
         }
 
         .footer-link {
-          font-size: 12px;
-          color: rgba(26,26,46,0.38);
+          font-size: 13px;
+          color: rgba(10,10,10,0.55);
           text-decoration: none;
           font-weight: 500;
           letter-spacing: 0.01em;
@@ -427,24 +436,29 @@ export default function Home() {
           cursor: pointer;
           background: none;
           border: none;
-          padding: 0;
+          padding: 4px 8px;
           font-family: 'Inter', sans-serif;
+          border-radius: 6px;
+          transition: color 0.18s, background 0.18s;
         }
-        .footer-link:hover { color: rgba(26,26,46,0.72); }
+        .footer-link:hover {
+          color: #1a1a2e;
+          background: rgba(91,91,214,0.07);
+        }
 
         .footer-divider {
           width: 1px;
-          height: 12px;
-          background: rgba(91,91,214,0.15);
+          height: 13px;
+          background: rgba(10,10,10,0.18);
         }
 
         .footer-copy {
-          font-size: 11px;
-          color: rgba(26,26,46,0.25);
+          font-size: 12px;
+          color: rgba(10,10,10,0.38);
           letter-spacing: 0.02em;
-          margin-top: 20px;
-          padding-top: 16px;
-          border-top: 1px solid rgba(91,91,214,0.06);
+          margin-top: 28px;
+          padding-top: 18px;
+          border-top: 1px solid rgba(91,91,214,0.08);
           text-align: center;
           max-width: 860px;
           margin-left: auto;
@@ -456,7 +470,7 @@ export default function Home() {
       <div className="page-glow" aria-hidden="true" />
       <div className="orb-mid"   aria-hidden="true" />
 
-      {/* ── Top Bar ─────────────────────────────────────────────────── */}
+      {/* ── Top Bar ── */}
       <header className="top-bar">
         <div className="logo" onClick={() => setScreen('home')}>Lumora.</div>
 
@@ -480,7 +494,8 @@ export default function Home() {
 
         <div className="nav-right">
           <div className="search-pill">
-            <svg className="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg className="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
             <input className="search-input" placeholder="Search decks…" />
@@ -489,7 +504,7 @@ export default function Home() {
         </div>
       </header>
 
-      {/* ── Main Content ─────────────────────────────────────────────── */}
+      {/* ── Main Content ── */}
       <main className="main-wrap">
         <div className="inner">
           {screen === 'home'     && <Upload onDeckCreated={addDeck} />}
@@ -507,19 +522,21 @@ export default function Home() {
         </div>
       </main>
 
-      {/* ── Footer ───────────────────────────────────────────────────── */}
+      {/* ── Footer ── */}
       <footer className="site-footer">
         <div className="footer-inner">
           <div>
             <div className="footer-logo">Lumora.</div>
             <div className="footer-tagline">Turn any PDF into smart flashcards</div>
           </div>
-          <nav className="footer-links">
-            <button className="footer-link" onClick={() => setScreen('home')}>Upload</button>
-            <div className="footer-divider" />
-            <button className="footer-link" onClick={() => setScreen('decks')}>Library</button>
-            <div className="footer-divider" />
-            <button className="footer-link" onClick={() => setScreen('dashboard')}>Stats</button>
+          <nav className="footer-nav-col">
+            <div className="footer-nav-row">
+              <button className="footer-link" onClick={() => setScreen('home')}>Upload</button>
+              <div className="footer-divider" />
+              <button className="footer-link" onClick={() => setScreen('decks')}>Library</button>
+              <div className="footer-divider" />
+              <button className="footer-link" onClick={() => setScreen('dashboard')}>Stats</button>
+            </div>
           </nav>
         </div>
         <p className="footer-copy">
@@ -532,27 +549,6 @@ export default function Home() {
 
 /**
  * DropZoneGrid
- * ─────────────
- * Drop this inside your Upload component's drop zone wrapper.
- *
- * The wrapper needs:
- *   position: relative;
- *   overflow: hidden;
- *   border-radius: 16px;
- *
- * Your content inside the drop zone must have:
- *   position: relative;
- *   z-index: 2;
- *
- * Usage:
- *   import { DropZoneGrid } from '../page';
- *
- *   <div className="drop-zone">
- *     <DropZoneGrid />
- *     <div style={{ position: 'relative', zIndex: 2 }}>
- *       ... upload UI ...
- *     </div>
- *   </div>
  */
 export function DropZoneGrid() {
   return (
@@ -574,8 +570,6 @@ export function DropZoneGrid() {
         <pattern id="evenGrid" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
           <path d="M40 0L0 0 0 40" fill="none" stroke="rgba(91,91,214,0.13)" strokeWidth="0.8"/>
         </pattern>
-
-        {/* Vignette: crisp centre, fades to invisible at all four edges */}
         <radialGradient id="gridFade" cx="50%" cy="50%" r="58%">
           <stop offset="0%"   stopColor="white" stopOpacity="1"/>
           <stop offset="55%"  stopColor="white" stopOpacity="0.72"/>
@@ -585,11 +579,7 @@ export function DropZoneGrid() {
           <rect width="600" height="260" fill="url(#gridFade)"/>
         </mask>
       </defs>
-
-      {/* Grid with vignette mask */}
       <rect width="600" height="260" fill="url(#evenGrid)" mask="url(#gridMask)"/>
-
-      {/* Corner L-bracket accents */}
       <path d="M0 0 L36 0 M0 0 L0 36"
         stroke="rgba(91,91,214,0.45)" strokeWidth="1.5" fill="none" strokeLinecap="square"/>
       <path d="M600 0 L564 0 M600 0 L600 36"
@@ -598,8 +588,6 @@ export function DropZoneGrid() {
         stroke="rgba(91,91,214,0.45)" strokeWidth="1.5" fill="none" strokeLinecap="square"/>
       <path d="M600 260 L564 260 M600 260 L600 224"
         stroke="rgba(91,91,214,0.45)" strokeWidth="1.5" fill="none" strokeLinecap="square"/>
-
-      {/* Centre crosshair */}
       <circle cx="300" cy="130" r="1.8" fill="rgba(91,91,214,0.28)"/>
       <line x1="288" y1="130" x2="312" y2="130" stroke="rgba(91,91,214,0.16)" strokeWidth="1"/>
       <line x1="300" y1="118" x2="300" y2="142" stroke="rgba(91,91,214,0.16)" strokeWidth="1"/>
