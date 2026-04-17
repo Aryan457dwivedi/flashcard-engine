@@ -1,9 +1,61 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Upload from './components/Upload';
 import Decks from './components/Decks';
 import Practice from './components/Practice';
 import Dashboard from './components/Dashboard';
+
+/* ── TextGenerateEffect (no external deps) ───────────────────────────── */
+function TextGenerateEffect({
+  words,
+  className,
+  filter = true,
+  duration = 0.5,
+  staggerDelay = 0.12,
+}: {
+  words: string;
+  className?: string;
+  filter?: boolean;
+  duration?: number;
+  staggerDelay?: number;
+}) {
+  const wordsArray = words.split(' ');
+  const [visibleCount, setVisibleCount] = useState(0);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    setVisibleCount(0);
+    let index = 0;
+    intervalRef.current = setInterval(() => {
+      index += 1;
+      setVisibleCount(index);
+      if (index >= wordsArray.length) clearInterval(intervalRef.current!);
+    }, staggerDelay * 1000);
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+  }, [words]);
+
+  return (
+    <span className={className} style={{ display: 'inline' }}>
+      {wordsArray.map((word, idx) => {
+        const visible = idx < visibleCount;
+        return (
+          <span
+            key={word + idx}
+            style={{
+              opacity: visible ? 1 : 0,
+              filter: filter ? (visible ? 'blur(0px)' : 'blur(8px)') : 'none',
+              transition: `opacity ${duration}s ease, filter ${duration}s ease`,
+              display: 'inline-block',
+              marginRight: '0.28em',
+            }}
+          >
+            {word}
+          </span>
+        );
+      })}
+    </span>
+  );
+}
 
 interface Card {
   question: string;
@@ -380,11 +432,11 @@ export default function Home() {
         .site-footer {
           position: relative;
           z-index: 1;
-          border-top: 1px solid rgba(91,91,214,0.12);
-          background: rgba(200,196,188,0.65);
-          backdrop-filter: blur(32px) saturate(160%);
-          -webkit-backdrop-filter: blur(32px) saturate(160%);
-          padding: 40px 36px 32px;
+          border-top: 1px solid rgba(91,91,214,0.10);
+          background: rgba(215,212,205,0.50);
+          backdrop-filter: blur(24px);
+          -webkit-backdrop-filter: blur(24px);
+          padding: 32px 36px 28px;
         }
 
         .footer-inner {
@@ -392,43 +444,34 @@ export default function Home() {
           margin: 0 auto;
           display: grid;
           grid-template-columns: 1fr auto;
-          align-items: start;
-          gap: 24px;
+          align-items: center;
+          gap: 16px;
         }
 
         .footer-logo {
           font-family: 'Space Grotesk', sans-serif;
           font-weight: 900;
-          font-size: 26px;
-          letter-spacing: -0.6px;
+          font-size: 22px;
+          letter-spacing: -0.4px;
           color: #0a0a0a;
-          margin-bottom: 7px;
-          line-height: 1;
+          margin-bottom: 4px;
         }
 
         .footer-tagline {
-          font-size: 13.5px;
-          color: rgba(10,10,10,0.55);
+          font-size: 12px;
+          color: rgba(26,26,46,0.38);
           letter-spacing: 0.01em;
-          font-weight: 400;
         }
 
-        .footer-nav-col {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-end;
-          gap: 14px;
-        }
-
-        .footer-nav-row {
+        .footer-links {
           display: flex;
           align-items: center;
-          gap: 6px;
+          gap: 24px;
         }
 
         .footer-link {
-          font-size: 13px;
-          color: rgba(10,10,10,0.55);
+          font-size: 12px;
+          color: rgba(26,26,46,0.38);
           text-decoration: none;
           font-weight: 500;
           letter-spacing: 0.01em;
@@ -436,29 +479,24 @@ export default function Home() {
           cursor: pointer;
           background: none;
           border: none;
-          padding: 4px 8px;
+          padding: 0;
           font-family: 'Inter', sans-serif;
-          border-radius: 6px;
-          transition: color 0.18s, background 0.18s;
         }
-        .footer-link:hover {
-          color: #1a1a2e;
-          background: rgba(91,91,214,0.07);
-        }
+        .footer-link:hover { color: rgba(26,26,46,0.72); }
 
         .footer-divider {
           width: 1px;
-          height: 13px;
-          background: rgba(10,10,10,0.18);
+          height: 12px;
+          background: rgba(91,91,214,0.15);
         }
 
         .footer-copy {
-          font-size: 12px;
-          color: rgba(10,10,10,0.38);
+          font-size: 11px;
+          color: rgba(26,26,46,0.25);
           letter-spacing: 0.02em;
-          margin-top: 28px;
-          padding-top: 18px;
-          border-top: 1px solid rgba(91,91,214,0.08);
+          margin-top: 20px;
+          padding-top: 16px;
+          border-top: 1px solid rgba(91,91,214,0.06);
           text-align: center;
           max-width: 860px;
           margin-left: auto;
@@ -527,16 +565,20 @@ export default function Home() {
         <div className="footer-inner">
           <div>
             <div className="footer-logo">Lumora.</div>
-            <div className="footer-tagline">Turn any PDF into smart flashcards</div>
-          </div>
-          <nav className="footer-nav-col">
-            <div className="footer-nav-row">
-              <button className="footer-link" onClick={() => setScreen('home')}>Upload</button>
-              <div className="footer-divider" />
-              <button className="footer-link" onClick={() => setScreen('decks')}>Library</button>
-              <div className="footer-divider" />
-              <button className="footer-link" onClick={() => setScreen('dashboard')}>Stats</button>
+            <div className="footer-tagline">
+              <TextGenerateEffect
+                words="Turn any PDF into smart flashcards"
+                duration={0.4}
+                staggerDelay={0.10}
+              />
             </div>
+          </div>
+          <nav className="footer-links">
+            <button className="footer-link" onClick={() => setScreen('home')}>Upload</button>
+            <div className="footer-divider" />
+            <button className="footer-link" onClick={() => setScreen('decks')}>Library</button>
+            <div className="footer-divider" />
+            <button className="footer-link" onClick={() => setScreen('dashboard')}>Stats</button>
           </nav>
         </div>
         <p className="footer-copy">
