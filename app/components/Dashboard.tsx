@@ -15,270 +15,443 @@ interface Deck {
   created: string;
 }
 
+// ── Card classification (must match Practice.tsx sm2 logic) ──────────────
+// reps === 0  → unseen
+// reps === 1  → learning (shaky)
+// reps >= 2   → mastered
+// ease < 1.6  → struggling (mastered but low ease factor = frequently missed)
+function classifyCard(c: Card) {
+  if (c.reps === 0)       return 'unseen'     as const;
+  if (c.reps === 1)       return 'learning'   as const;
+  if (c.ease < 1.6)       return 'struggling' as const;
+  return                         'mastered'   as const;
+}
+
+// ── Deck-level helpers ────────────────────────────────────────────────────
+function deckStats(deck: Deck) {
+  const total      = deck.cards.length;
+  const mastered   = deck.cards.filter(c => classifyCard(c) === 'mastered').length;
+  const learning   = deck.cards.filter(c => classifyCard(c) === 'learning').length;
+  const struggling = deck.cards.filter(c => classifyCard(c) === 'struggling').length;
+  const unseen     = deck.cards.filter(c => classifyCard(c) === 'unseen').length;
+  const seen       = total - unseen;
+  const mastPct    = total > 0 ? Math.round((mastered / total) * 100) : 0;
+  const seenPct    = total > 0 ? Math.round((seen / total) * 100) : 0;
+
+  // Average ease of seen cards (higher = easier)
+  const seenCards  = deck.cards.filter(c => c.reps > 0);
+  const avgEase    = seenCards.length > 0
+    ? seenCards.reduce((s, c) => s + c.ease, 0) / seenCards.length
+    : 2.5;
+
+  // "Due for review" = seen but interval expired (we use interval=1 as proxy for overdue)
+  const dueCount   = deck.cards.filter(c => c.reps > 0 && c.interval <= 1).length;
+
+  return { total, mastered, learning, struggling, unseen, seen, mastPct, seenPct, avgEase, dueCount };
+}
+
+// ── Radial progress ring ──────────────────────────────────────────────────
+function Ring({ pct, color, size = 64 }: { pct: number; color: string; size?: number }) {
+  const r  = (size - 8) / 2;
+  const c  = size / 2;
+  const dash = 2 * Math.PI * r;
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      <circle cx={c} cy={c} r={r} fill="none" stroke="rgba(26,26,46,0.07)" strokeWidth="5" />
+      <circle cx={c} cy={c} r={r} fill="none" stroke={color} strokeWidth="5"
+        strokeLinecap="round"
+        strokeDasharray={`${dash}`}
+        strokeDashoffset={`${dash * (1 - pct / 100)}`}
+        transform={`rotate(-90 ${c} ${c})`}
+        style={{ transition: 'stroke-dashoffset 0.8s cubic-bezier(0.4,0,0.2,1)' }}
+      />
+      <text x={c} y={c + 1} textAnchor="middle" dominantBaseline="middle"
+        fontSize={size < 56 ? 11 : 13} fontWeight="700"
+        fontFamily="'DM Sans', sans-serif" fill={color}>
+        {pct}%
+      </text>
+    </svg>
+  );
+}
+
+// ── Stacked bar ───────────────────────────────────────────────────────────
+function StackBar({ mastered, learning, struggling, unseen, total }: {
+  mastered: number; learning: number; struggling: number; unseen: number; total: number;
+}) {
+  const pct = (n: number) => total > 0 ? (n / total) * 100 : 0;
+  return (
+    <div style={{ height: '8px', display: 'flex', borderRadius: '999px', overflow: 'hidden', background: 'rgba(26,26,46,0.07)', gap: '1px' }}>
+      {mastered   > 0 && <div style={{ width: `${pct(mastered)}%`,   background: '#1D9E75', transition: 'width 0.7s ease' }} />}
+      {learning   > 0 && <div style={{ width: `${pct(learning)}%`,   background: '#7F77DD', transition: 'width 0.7s ease' }} />}
+      {struggling > 0 && <div style={{ width: `${pct(struggling)}%`, background: '#E24B4A', transition: 'width 0.7s ease' }} />}
+      {unseen     > 0 && <div style={{ width: `${pct(unseen)}%`,     background: 'rgba(26,26,46,0.12)', transition: 'width 0.7s ease' }} />}
+    </div>
+  );
+}
+
+// ── Mini bar ─────────────────────────────────────────────────────────────
+function MiniBar({ pct, color }: { pct: number; color: string }) {
+  return (
+    <div style={{ height: '5px', background: 'rgba(26,26,46,0.07)', borderRadius: '999px', overflow: 'hidden' }}>
+      <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: '999px', transition: 'width 0.7s ease' }} />
+    </div>
+  );
+}
+
+// ── Ease gauge (shows how well cards are retained) ───────────────────────
+function EaseGauge({ ease }: { ease: number }) {
+  // ease range: 1.3 (hard) to 3.5 (very easy). Normal ~2.5.
+  const pct = Math.round(Math.min(100, Math.max(0, ((ease - 1.3) / (3.5 - 1.3)) * 100)));
+  const color = ease < 1.8 ? '#E24B4A' : ease < 2.2 ? '#BA7517' : '#1D9E75';
+  const label = ease < 1.8 ? 'Hard' : ease < 2.2 ? 'Fair' : ease < 2.8 ? 'Good' : 'Easy';
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <div style={{ flex: 1, height: '4px', background: 'rgba(26,26,46,0.07)', borderRadius: '999px', overflow: 'hidden' }}>
+        <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: '999px', transition: 'width 0.7s ease' }} />
+      </div>
+      <span style={{ fontSize: '11px', fontWeight: '600', color, minWidth: '28px' }}>{label}</span>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  DASHBOARD
+// ═══════════════════════════════════════════════════════════════════════════
 export default function Dashboard({ decks }: { decks: Deck[] }) {
+
+  // ── Global stats ──────────────────────────────────────────────────────
+  const allCards   = decks.flatMap(d => d.cards);
+  const total      = allCards.length;
+  const mastered   = allCards.filter(c => classifyCard(c) === 'mastered').length;
+  const learning   = allCards.filter(c => classifyCard(c) === 'learning').length;
+  const struggling = allCards.filter(c => classifyCard(c) === 'struggling').length;
+  const unseen     = allCards.filter(c => classifyCard(c) === 'unseen').length;
+  const dueTotal   = allCards.filter(c => c.reps > 0 && c.interval <= 1).length;
+  const mastPct    = total > 0 ? Math.round((mastered / total) * 100) : 0;
+  const seenPct    = total > 0 ? Math.round(((total - unseen) / total) * 100) : 0;
+  const seenCards  = allCards.filter(c => c.reps > 0);
+  const globalEase = seenCards.length > 0
+    ? seenCards.reduce((s, c) => s + c.ease, 0) / seenCards.length
+    : 2.5;
+
+  // ── Empty state ────────────────────────────────────────────────────────
   if (decks.length === 0) {
     return (
-      <div className="fade-up" style={{ textAlign: 'center', padding: '6rem 0' }}>
+      <div style={{ fontFamily: "'DM Sans', sans-serif", textAlign: 'center', padding: '6rem 0' }}>
         <div style={{
-          width: '64px', height: '64px',
-          background: 'rgba(99,102,241,0.1)',
-          borderRadius: '16px',
+          width: '72px', height: '72px',
+          background: '#EEEDFE',
+          border: '1px solid #AFA9EC',
+          borderRadius: '20px',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          margin: '0 auto 1.5rem'
+          margin: '0 auto 1.5rem',
         }}>
-          <svg width="28" height="28" fill="none" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-            <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+          <svg width="30" height="30" fill="none" stroke="#7F77DD" strokeWidth="1.8"
+            strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+            <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
           </svg>
         </div>
-        <h2 style={{ fontSize: '1.4rem', fontWeight: '700', marginBottom: '0.5rem', color: '#1a1a2e' }}>No progress yet</h2>
-        <p style={{ color: 'rgba(26,26,46,0.45)', fontSize: '0.95rem' }}>Upload a PDF and start practicing to see your stats</p>
+        <h2 style={{ fontSize: '1.4rem', fontWeight: '600', marginBottom: '0.5rem', color: '#0f0f1a' }}>
+          No decks yet
+        </h2>
+        <p style={{ color: 'rgba(15,15,26,0.4)', fontSize: '0.9rem' }}>
+          Upload a PDF and create your first deck to see your progress here.
+        </p>
       </div>
     );
   }
 
-  const totalCards = decks.reduce((acc, d) => acc + d.cards.length, 0);
-  const totalMastered = decks.reduce((acc, d) => acc + d.cards.filter(c => c.ease >= 2.5 && c.reps > 2).length, 0);
-  const totalShaky = decks.reduce((acc, d) => acc + d.cards.filter(c => c.reps > 0 && c.ease < 2.5).length, 0);
-  const totalUnseen = decks.reduce((acc, d) => acc + d.cards.filter(c => c.reps === 0).length, 0);
-  const masteryPct = totalCards > 0 ? Math.round((totalMastered / totalCards) * 100) : 0;
-  const reviewedPct = totalCards > 0 ? Math.round(((totalCards - totalUnseen) / totalCards) * 100) : 0;
-
-  // Generate heatmap squares (mock activity)
-  const heatSquares = Array.from({ length: 70 }, (_, i) => {
-    const levels = [0, 0, 1, 2, 3, 4];
-    return levels[Math.floor(Math.random() * levels.length)];
-  });
-  const heatColors = ['rgba(99,102,241,0.08)', 'rgba(99,102,241,0.2)', 'rgba(99,102,241,0.4)', 'rgba(99,102,241,0.65)', '#6366f1'];
-
-  const milestones = [
-    { icon: '⚡', title: 'First Session', desc: 'Completed your first practice session', unlocked: true, color: '#6366f1' },
-    { icon: '🔥', title: 'On a Roll', desc: 'Practiced 3 days in a row', unlocked: totalMastered >= 5, color: '#f97316' },
-    { icon: '🏆', title: 'Half Mastered', desc: `Master 50% of a deck`, unlocked: masteryPct >= 50, color: '#16a34a' },
-    { icon: '🔒', title: 'Deep Focus', desc: 'Complete 10 sessions to unlock', unlocked: false, color: 'rgba(26,26,46,0.2)' },
-  ];
-
   return (
-    <div className="fade-up" style={{ fontFamily: "'Inter', sans-serif" }}>
+    <div style={{ fontFamily: "'DM Sans', sans-serif", color: '#0f0f1a' }}>
 
-      {/* Header */}
+      {/* ── Page header ── */}
       <div style={{ marginBottom: '1.75rem' }}>
-        <h2 style={{ fontSize: '1.6rem', fontWeight: '800', letterSpacing: '-0.5px', color: '#1a1a2e' }}>Cognitive Analytics</h2>
-        <p style={{ color: 'rgba(26,26,46,0.4)', marginTop: '0.3rem', fontSize: '0.875rem' }}>Track your mastery across all decks</p>
+        <h2 style={{ fontSize: '1.55rem', fontWeight: '600', letterSpacing: '-0.4px', color: '#0f0f1a', marginBottom: '4px' }}>
+          Your Progress
+        </h2>
+        <p style={{ color: 'rgba(15,15,26,0.4)', fontSize: '0.875rem' }}>
+          {decks.length} deck{decks.length !== 1 ? 's' : ''} · {total} cards total
+        </p>
       </div>
 
-      {/* Bento Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '14px' }}>
-
-        {/* Retention Chart — large */}
-        <div style={{
-          gridColumn: 'span 8',
-          background: 'rgba(255,255,255,0.85)',
-          border: '1px solid rgba(99,102,241,0.12)',
-          borderRadius: '18px',
-          padding: '1.75rem',
-          boxShadow: '0 2px 20px rgba(0,0,0,0.06)',
-          position: 'relative',
-          overflow: 'hidden',
-        }}>
-          <div style={{ position: 'absolute', top: '-40px', right: '-40px', width: '200px', height: '200px', background: 'radial-gradient(circle, rgba(99,102,241,0.07) 0%, transparent 70%)', borderRadius: '50%', pointerEvents: 'none' }} />
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
-            <div>
-              <h3 style={{ fontSize: '1.05rem', fontWeight: '700', color: '#1a1a2e', marginBottom: '0.2rem' }}>Retention Curve</h3>
-              <p style={{ fontSize: '0.75rem', color: 'rgba(26,26,46,0.4)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Memory decay & interval projection</p>
+      {/* ── Top stat row ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '14px' }}>
+        {[
+          { label: 'Mastered',    val: mastered,   color: '#1D9E75', bg: '#E1F5EE', border: '#9FE1CB', icon: '✓' },
+          { label: 'Learning',    val: learning,   color: '#7F77DD', bg: '#EEEDFE', border: '#AFA9EC', icon: '~' },
+          { label: 'Struggling',  val: struggling, color: '#E24B4A', bg: '#FCEBEB', border: '#F7C1C1', icon: '↺' },
+          { label: 'Unseen',      val: unseen,     color: '#888780', bg: '#F1EFE8', border: '#D3D1C7', icon: '○' },
+        ].map(({ label, val, color, bg, border, icon }) => (
+          <div key={label} style={{
+            background: bg,
+            border: `1px solid ${border}`,
+            borderRadius: '16px',
+            padding: '18px 20px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div>
+                <div style={{ fontSize: '1.9rem', fontWeight: '600', color, lineHeight: 1, marginBottom: '6px' }}>
+                  {val}
+                </div>
+                <div style={{ fontSize: '12px', fontWeight: '500', color, opacity: 0.75, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  {label}
+                </div>
+              </div>
+              <div style={{
+                width: '32px', height: '32px', borderRadius: '50%',
+                background: 'rgba(255,255,255,0.5)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '16px', color,
+              }}>
+                {icon}
+              </div>
             </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '2rem', fontWeight: '900', color: '#6366f1', lineHeight: 1 }}>{masteryPct}%</div>
-              <div style={{ fontSize: '0.7rem', color: 'rgba(26,26,46,0.4)', textTransform: 'uppercase', letterSpacing: '0.5px', marginTop: '2px' }}>Stability Index</div>
+            <div style={{ marginTop: '14px' }}>
+              <MiniBar pct={total > 0 ? Math.round((val / total) * 100) : 0} color={color} />
             </div>
           </div>
-          <svg width="100%" height="130" viewBox="0 0 600 130" preserveAspectRatio="none" style={{ display: 'block' }}>
-            <defs>
-              <linearGradient id="retGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#6366f1" stopOpacity="0.18" />
-                <stop offset="100%" stopColor="#6366f1" stopOpacity="0" />
-              </linearGradient>
-            </defs>
-            <path d="M0,100 Q80,85 150,90 T300,55 T450,65 T600,25 L600,130 L0,130 Z" fill="url(#retGrad)" />
-            <path d="M0,100 Q80,85 150,90 T300,55 T450,65 T600,25" fill="none" stroke="#6366f1" strokeWidth="2.5" strokeLinecap="round" />
-            <circle cx="300" cy="55" r="4" fill="#6366f1" />
-            <circle cx="300" cy="55" r="10" fill="#6366f1" fillOpacity="0.15" />
-            <path d="M300,25 Q400,18 450,65 T600,25" fill="none" stroke="#a78bfa" strokeWidth="1.5" strokeDasharray="5,4" strokeLinecap="round" opacity="0.5" />
-          </svg>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.75rem' }}>
-            {['Now', '7 days', '14 days', '21 days', '30 days'].map(l => (
-              <span key={l} style={{ fontSize: '0.68rem', color: 'rgba(26,26,46,0.3)', textTransform: 'uppercase', letterSpacing: '0.3px' }}>{l}</span>
-            ))}
+        ))}
+      </div>
+
+      {/* ── Overview + Due ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+
+        {/* Overall mastery */}
+        <div style={{
+          background: 'rgba(255,255,255,0.88)',
+          border: '1px solid rgba(127,119,221,0.13)',
+          borderRadius: '18px',
+          padding: '22px 24px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '24px',
+        }}>
+          <Ring pct={mastPct} color="#1D9E75" size={80} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '13px', fontWeight: '600', color: '#0f0f1a', marginBottom: '4px' }}>
+              Overall Mastery
+            </div>
+            <div style={{ fontSize: '12px', color: 'rgba(15,15,26,0.4)', marginBottom: '14px' }}>
+              {mastered} of {total} cards mastered
+            </div>
+            <StackBar mastered={mastered} learning={learning} struggling={struggling} unseen={unseen} total={total} />
+            <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+              {[
+                ['#1D9E75', 'Mastered'],
+                ['#7F77DD', 'Learning'],
+                ['#E24B4A', 'Struggling'],
+                ['rgba(26,26,46,0.2)', 'Unseen'],
+              ].map(([color, label]) => (
+                <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: color, flexShrink: 0 }} />
+                  <span style={{ fontSize: '10.5px', color: 'rgba(15,15,26,0.4)' }}>{label}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Cognitive Load — right */}
+        {/* Due for review + ease */}
         <div style={{
-          gridColumn: 'span 4',
-          background: 'rgba(255,255,255,0.85)',
-          border: '1px solid rgba(99,102,241,0.12)',
+          background: 'rgba(255,255,255,0.88)',
+          border: '1px solid rgba(127,119,221,0.13)',
           borderRadius: '18px',
-          padding: '1.75rem',
-          boxShadow: '0 2px 20px rgba(0,0,0,0.06)',
+          padding: '22px 24px',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
         }}>
           <div>
-            <h3 style={{ fontSize: '1.05rem', fontWeight: '700', color: '#1a1a2e', marginBottom: '0.2rem' }}>Cognitive Load</h3>
-            <p style={{ fontSize: '0.75rem', color: 'rgba(26,26,46,0.4)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Review vs New cards</p>
+            <div style={{ fontSize: '13px', fontWeight: '600', color: '#0f0f1a', marginBottom: '4px' }}>
+              Ready to Review
+            </div>
+            <div style={{ fontSize: '12px', color: 'rgba(15,15,26,0.4)', marginBottom: '20px' }}>
+              Cards whose interval has elapsed
+            </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem', margin: '1.25rem 0' }}>
-            {[
-              { label: 'Cards Reviewed', value: totalCards - totalUnseen, max: totalCards, pct: reviewedPct, color: '#6366f1' },
-              { label: 'Mastered', value: totalMastered, max: totalCards, pct: masteryPct, color: '#16a34a' },
-              { label: 'Still Learning', value: totalShaky, max: totalCards, pct: totalCards > 0 ? Math.round((totalShaky / totalCards) * 100) : 0, color: '#d97706' },
-            ].map(({ label, value, max, pct, color }) => (
-              <div key={label}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                  <span style={{ fontSize: '0.75rem', color: 'rgba(26,26,46,0.5)', textTransform: 'uppercase', letterSpacing: '0.4px' }}>{label}</span>
-                  <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#1a1a2e' }}>{value}/{max}</span>
-                </div>
-                <div style={{ height: '5px', background: 'rgba(26,26,46,0.07)', borderRadius: '999px', overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: '999px', transition: 'width 0.6s ease' }} />
-                </div>
-              </div>
-            ))}
-          </div>
-          <p style={{ fontSize: '0.78rem', color: 'rgba(26,26,46,0.35)', fontStyle: 'italic', borderTop: '1px solid rgba(26,26,46,0.07)', paddingTop: '1rem' }}>
-            Keep going — consistency beats intensity.
-          </p>
-        </div>
 
-        {/* Heatmap */}
-        <div style={{
-          gridColumn: 'span 7',
-          background: 'rgba(255,255,255,0.85)',
-          border: '1px solid rgba(99,102,241,0.12)',
-          borderRadius: '18px',
-          padding: '1.75rem',
-          boxShadow: '0 2px 20px rgba(0,0,0,0.06)',
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
             <div>
-              <h3 style={{ fontSize: '1.05rem', fontWeight: '700', color: '#1a1a2e' }}>Activity Heatmap</h3>
-              <p style={{ fontSize: '0.75rem', color: 'rgba(26,26,46,0.4)', textTransform: 'uppercase', letterSpacing: '0.5px', marginTop: '2px' }}>Last 10 weeks</p>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              {heatColors.map((c, i) => (
-                <div key={i} style={{ width: '10px', height: '10px', borderRadius: '3px', background: c, border: '1px solid rgba(99,102,241,0.1)' }} />
-              ))}
-            </div>
-          </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
-            {heatSquares.map((level, i) => (
-              <div key={i} style={{
-                width: '13px', height: '13px',
-                borderRadius: '3px',
-                background: heatColors[level],
-                border: '1px solid rgba(99,102,241,0.08)',
-                transition: 'transform 0.1s',
-                cursor: 'default',
-              }} />
-            ))}
-          </div>
-        </div>
-
-        {/* Milestones */}
-        <div style={{
-          gridColumn: 'span 5',
-          background: 'rgba(255,255,255,0.85)',
-          border: '1px solid rgba(99,102,241,0.12)',
-          borderRadius: '18px',
-          padding: '1.75rem',
-          boxShadow: '0 2px 20px rgba(0,0,0,0.06)',
-        }}>
-          <h3 style={{ fontSize: '1.05rem', fontWeight: '700', color: '#1a1a2e', marginBottom: '1.1rem' }}>Milestones</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-            {milestones.map(({ icon, title, desc, unlocked, color }) => (
-              <div key={title} style={{
-                display: 'flex', alignItems: 'center', gap: '0.85rem',
-                padding: '0.75rem 1rem',
-                borderRadius: '12px',
-                background: unlocked ? `rgba(99,102,241,0.05)` : 'rgba(26,26,46,0.03)',
-                border: `1px solid ${unlocked ? 'rgba(99,102,241,0.12)' : 'rgba(26,26,46,0.07)'}`,
-                opacity: unlocked ? 1 : 0.5,
-                transition: 'all 0.2s',
-              }}>
-                <div style={{
-                  width: '36px', height: '36px', borderRadius: '10px',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  background: unlocked ? `${color}18` : 'rgba(26,26,46,0.06)',
-                  fontSize: '1.1rem', flexShrink: 0,
-                }}>
-                  {icon}
-                </div>
-                <div>
-                  <p style={{ fontSize: '0.82rem', fontWeight: '600', color: '#1a1a2e' }}>{title}</p>
-                  <p style={{ fontSize: '0.72rem', color: 'rgba(26,26,46,0.4)' }}>{desc}</p>
-                </div>
-                {unlocked && (
-                  <div style={{ marginLeft: 'auto', width: '8px', height: '8px', borderRadius: '50%', background: '#16a34a', flexShrink: 0 }} />
-                )}
+              <div style={{ fontSize: '3rem', fontWeight: '600', color: dueTotal > 0 ? '#BA7517' : '#1D9E75', lineHeight: 1 }}>
+                {dueTotal}
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Deck Proficiency */}
-        <div style={{
-          gridColumn: 'span 12',
-          background: 'rgba(255,255,255,0.85)',
-          border: '1px solid rgba(99,102,241,0.12)',
-          borderRadius: '18px',
-          padding: '1.75rem',
-          boxShadow: '0 2px 20px rgba(0,0,0,0.06)',
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-            <div>
-              <h3 style={{ fontSize: '1.05rem', fontWeight: '700', color: '#1a1a2e' }}>Deck Proficiency</h3>
-              <p style={{ fontSize: '0.75rem', color: 'rgba(26,26,46,0.4)', textTransform: 'uppercase', letterSpacing: '0.5px', marginTop: '2px' }}>Cross-deck mastery status</p>
+              <div style={{ fontSize: '12px', color: 'rgba(15,15,26,0.4)', marginTop: '4px' }}>
+                {dueTotal === 0 ? 'All caught up!' : `card${dueTotal !== 1 ? 's' : ''} due now`}
+              </div>
             </div>
-            <div style={{ display: 'flex', gap: '1rem', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'rgba(26,26,46,0.4)' }}>
-              {[['#6366f1', 'Mastered'], ['#a78bfa', 'Reviewing'], ['rgba(26,26,46,0.12)', 'Unseen']].map(([c, l]) => (
-                <div key={l} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: c }} />
-                  {l}
-                </div>
-              ))}
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: '11px', color: 'rgba(15,15,26,0.4)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Retention ease
+              </div>
+              <div style={{ width: '140px' }}>
+                <EaseGauge ease={globalEase} />
+              </div>
+              <div style={{ fontSize: '11px', color: 'rgba(15,15,26,0.35)', marginTop: '4px' }}>
+                avg ease factor: {globalEase.toFixed(2)}
+              </div>
             </div>
           </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
-            {decks.map(deck => {
-              const mastered = deck.cards.filter(c => c.ease >= 2.5 && c.reps > 2).length;
-              const shaky = deck.cards.filter(c => c.reps > 0 && c.ease < 2.5).length;
-              const unseen = deck.cards.filter(c => c.reps === 0).length;
-              const total = deck.cards.length;
-              const mastPct = Math.round((mastered / total) * 100);
-              const shakPct = Math.round((shaky / total) * 100);
-              const unsPct = Math.round((unseen / total) * 100);
-
-              return (
-                <div key={deck.id} style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-                  <div style={{ width: '180px', flexShrink: 0 }}>
-                    <h4 style={{ fontSize: '0.85rem', fontWeight: '600', color: '#1a1a2e', marginBottom: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{deck.name}</h4>
-                    <p style={{ fontSize: '0.7rem', color: 'rgba(26,26,46,0.35)', textTransform: 'uppercase', letterSpacing: '0.3px' }}>{total} cards</p>
-                  </div>
-                  <div style={{ flex: 1, height: '10px', display: 'flex', borderRadius: '999px', overflow: 'hidden', background: 'rgba(26,26,46,0.07)' }}>
-                    <div style={{ height: '100%', width: `${mastPct}%`, background: '#6366f1', transition: 'width 0.6s ease' }} />
-                    <div style={{ height: '100%', width: `${shakPct}%`, background: '#a78bfa', transition: 'width 0.6s ease' }} />
-                    <div style={{ height: '100%', width: `${unsPct}%`, background: 'rgba(26,26,46,0.1)', transition: 'width 0.6s ease' }} />
-                  </div>
-                  <div style={{ width: '38px', textAlign: 'right', fontSize: '0.85rem', fontWeight: '800', color: '#6366f1', flexShrink: 0 }}>
-                    {mastPct}%
-                  </div>
-                </div>
-              );
-            })}
-          </div>
         </div>
-
       </div>
+
+      {/* ── Per-deck breakdown ── */}
+      <div style={{
+        background: 'rgba(255,255,255,0.88)',
+        border: '1px solid rgba(127,119,221,0.13)',
+        borderRadius: '18px',
+        padding: '22px 24px',
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
+          <div>
+            <div style={{ fontSize: '13px', fontWeight: '600', color: '#0f0f1a', marginBottom: '2px' }}>
+              Deck Breakdown
+            </div>
+            <div style={{ fontSize: '12px', color: 'rgba(15,15,26,0.4)' }}>
+              Per-deck mastery and retention
+            </div>
+          </div>
+          {/* Legend */}
+          <div style={{ display: 'flex', gap: '14px' }}>
+            {[['#1D9E75', 'Mastered'], ['#7F77DD', 'Learning'], ['#E24B4A', 'Struggling'], ['rgba(26,26,46,0.15)', 'Unseen']].map(([c, l]) => (
+              <div key={l} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <div style={{ width: '8px', height: '8px', borderRadius: '2px', background: c, flexShrink: 0 }} />
+                <span style={{ fontSize: '11px', color: 'rgba(15,15,26,0.4)' }}>{l}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Table header */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '200px 1fr 80px 80px 80px 130px',
+          gap: '12px',
+          padding: '0 4px 10px',
+          borderBottom: '1px solid rgba(15,15,26,0.07)',
+          marginBottom: '4px',
+        }}>
+          {['Deck', 'Progress', 'Mastered', 'Due', 'Cards', 'Ease'].map(h => (
+            <div key={h} style={{ fontSize: '11px', fontWeight: '600', color: 'rgba(15,15,26,0.35)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              {h}
+            </div>
+          ))}
+        </div>
+
+        {/* Deck rows */}
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          {decks.map((deck, i) => {
+            const s = deckStats(deck);
+            return (
+              <div key={deck.id} style={{
+                display: 'grid',
+                gridTemplateColumns: '200px 1fr 80px 80px 80px 130px',
+                gap: '12px',
+                alignItems: 'center',
+                padding: '14px 4px',
+                borderBottom: i < decks.length - 1 ? '1px solid rgba(15,15,26,0.05)' : 'none',
+              }}>
+                {/* Name */}
+                <div>
+                  <div style={{
+                    fontSize: '13px', fontWeight: '500', color: '#0f0f1a',
+                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                    marginBottom: '2px',
+                  }}>
+                    {deck.name}
+                  </div>
+                  <div style={{ fontSize: '11px', color: 'rgba(15,15,26,0.35)' }}>
+                    {new Date(deck.created).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  </div>
+                </div>
+
+                {/* Stacked progress bar */}
+                <div>
+                  <StackBar
+                    mastered={s.mastered}
+                    learning={s.learning}
+                    struggling={s.struggling}
+                    unseen={s.unseen}
+                    total={s.total}
+                  />
+                  <div style={{ fontSize: '10px', color: 'rgba(15,15,26,0.3)', marginTop: '4px' }}>
+                    {s.seenPct}% seen
+                  </div>
+                </div>
+
+                {/* Mastered % */}
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{
+                    fontSize: '15px', fontWeight: '600',
+                    color: s.mastPct >= 70 ? '#1D9E75' : s.mastPct >= 30 ? '#7F77DD' : '#888780',
+                  }}>
+                    {s.mastPct}%
+                  </div>
+                  <div style={{ fontSize: '10px', color: 'rgba(15,15,26,0.3)' }}>{s.mastered} cards</div>
+                </div>
+
+                {/* Due */}
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{
+                    fontSize: '15px', fontWeight: '600',
+                    color: s.dueCount > 0 ? '#BA7517' : '#1D9E75',
+                  }}>
+                    {s.dueCount}
+                  </div>
+                  <div style={{ fontSize: '10px', color: 'rgba(15,15,26,0.3)' }}>due</div>
+                </div>
+
+                {/* Total cards */}
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '15px', fontWeight: '600', color: '#0f0f1a' }}>
+                    {s.total}
+                  </div>
+                  <div style={{ fontSize: '10px', color: 'rgba(15,15,26,0.3)' }}>total</div>
+                </div>
+
+                {/* Ease gauge */}
+                <div>
+                  {s.seen > 0
+                    ? <EaseGauge ease={s.avgEase} />
+                    : <span style={{ fontSize: '11px', color: 'rgba(15,15,26,0.25)' }}>Not started</span>
+                  }
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── Insight footer ── */}
+      {total > 0 && (
+        <div style={{
+          marginTop: '14px',
+          background: mastPct >= 80
+            ? '#E1F5EE'
+            : dueTotal > 10
+              ? '#FAEEDA'
+              : '#EEEDFE',
+          border: `1px solid ${mastPct >= 80 ? '#9FE1CB' : dueTotal > 10 ? '#FAC775' : '#AFA9EC'}`,
+          borderRadius: '14px',
+          padding: '14px 20px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+        }}>
+          <div style={{ fontSize: '20px', flexShrink: 0 }}>
+            {mastPct >= 80 ? '🏆' : dueTotal > 10 ? '⚡' : '📈'}
+          </div>
+          <div style={{ fontSize: '13px', color: mastPct >= 80 ? '#0F6E56' : dueTotal > 10 ? '#633806' : '#534AB7', fontWeight: '400', lineHeight: 1.5 }}>
+            {mastPct >= 80
+              ? `Outstanding! You've mastered ${mastPct}% of all cards. Keep reviewing to maintain retention.`
+              : dueTotal > 10
+                ? `You have ${dueTotal} cards due for review. Tackle them now while they're still fresh.`
+                : seenPct < 30
+                  ? `You've seen ${seenPct}% of your cards. Start practicing to build your knowledge base.`
+                  : `You're making good progress — ${mastered} cards mastered, ${learning} in learning. Keep the streak going!`
+            }
+          </div>
+        </div>
+      )}
     </div>
   );
 }
