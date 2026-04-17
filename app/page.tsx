@@ -80,7 +80,17 @@ export default function Home() {
         }
 
         body {
-          background: #e8e7e0;
+          background: linear-gradient(
+            160deg,
+            #d8d4ee 0%,
+            #dedad0 20%,
+            #e2dce8 38%,
+            #d8e2ee 55%,
+            #d4e8e0 72%,
+            #dce4d8 88%,
+            #e0ddd4 100%
+          );
+          background-attachment: fixed;
           color: #1a1a2e;
           font-family: 'Inter', sans-serif;
           min-height: 100dvh;
@@ -91,16 +101,16 @@ export default function Home() {
         body::before {
           content: '';
           position: fixed;
-          width: 760px; height: 540px;
-          top: -220px; left: -160px;
+          width: 820px; height: 600px;
+          top: -240px; left: -180px;
           border-radius: 50%;
           background: radial-gradient(ellipse at 38% 38%,
-            rgba(99,88,240,0.20) 0%,
-            rgba(120,100,255,0.11) 30%,
-            rgba(91,91,214,0.05) 58%,
-            transparent 78%
+            rgba(99,88,240,0.32) 0%,
+            rgba(120,100,255,0.18) 30%,
+            rgba(91,91,214,0.08) 58%,
+            transparent 75%
           );
-          filter: blur(64px);
+          filter: blur(72px);
           pointer-events: none;
           z-index: 0;
           animation: orb-a 16s ease-in-out infinite;
@@ -109,15 +119,16 @@ export default function Home() {
         body::after {
           content: '';
           position: fixed;
-          width: 560px; height: 420px;
-          bottom: -150px; right: -90px;
+          width: 640px; height: 500px;
+          bottom: -160px; right: -100px;
           border-radius: 50%;
           background: radial-gradient(ellipse at 60% 60%,
-            rgba(110,85,245,0.13) 0%,
-            rgba(91,91,214,0.06) 48%,
-            transparent 74%
+            rgba(80,140,240,0.22) 0%,
+            rgba(91,130,214,0.12) 42%,
+            rgba(100,180,220,0.06) 65%,
+            transparent 80%
           );
-          filter: blur(60px);
+          filter: blur(68px);
           pointer-events: none;
           z-index: 0;
           animation: orb-b 20s ease-in-out infinite;
@@ -130,8 +141,8 @@ export default function Home() {
           width: 720px; height: 480px;
           border-radius: 50%;
           background: radial-gradient(ellipse at 50% 50%,
-            rgba(91,91,214,0.065) 0%,
-            rgba(120,110,255,0.030) 42%,
+            rgba(91,91,214,0.09) 0%,
+            rgba(120,110,255,0.04) 42%,
             transparent 68%
           );
           filter: blur(44px);
@@ -140,6 +151,24 @@ export default function Home() {
           animation: orb-c 24s ease-in-out infinite;
         }
 
+        .orb-mid {
+          position: fixed;
+          top: 55%; left: 65%;
+          transform: translate(-50%, -50%);
+          width: 480px; height: 360px;
+          border-radius: 50%;
+          background: radial-gradient(ellipse at 50% 50%,
+            rgba(180,120,255,0.12) 0%,
+            rgba(140,100,240,0.06) 50%,
+            transparent 72%
+          );
+          filter: blur(52px);
+          pointer-events: none;
+          z-index: 0;
+          animation: orb-c 18s ease-in-out infinite 3s;
+        }
+
+        /* ── Top bar ───────────────────────────────────────────────── */
         .top-bar {
           position: fixed;
           top: 0; left: 0; right: 0;
@@ -149,7 +178,7 @@ export default function Home() {
           grid-template-columns: 1fr auto 1fr;
           align-items: center;
           padding: 0 36px;
-          background: rgba(240,239,233,0.55);
+          background: rgba(225,222,215,0.55);
           backdrop-filter: blur(48px) saturate(200%) brightness(1.02);
           -webkit-backdrop-filter: blur(48px) saturate(200%) brightness(1.02);
           border-bottom: 1px solid rgba(91,91,214,0.08);
@@ -160,7 +189,6 @@ export default function Home() {
           isolation: isolate;
         }
 
-        /* Vercel-signature glow seam */
         .top-bar::before {
           content: '';
           position: absolute;
@@ -179,7 +207,6 @@ export default function Home() {
           pointer-events: none;
         }
 
-        /* Bloom above the seam */
         .top-bar::after {
           content: '';
           position: absolute;
@@ -195,6 +222,7 @@ export default function Home() {
           pointer-events: none;
         }
 
+        /* ── Logo ──────────────────────────────────────────────────── */
         .logo {
           font-family: 'Space Grotesk', sans-serif;
           font-weight: 900;
@@ -206,6 +234,7 @@ export default function Home() {
           justify-self: start;
         }
 
+        /* ── Nav ───────────────────────────────────────────────────── */
         .nav-links {
           display: flex;
           align-items: center;
@@ -270,6 +299,7 @@ export default function Home() {
         .nav-btn:active { transform: scale(0.96) translateY(0); }
         .nav-btn.disabled { opacity: 0.28; cursor: not-allowed; pointer-events: none; }
 
+        /* ── Right side ────────────────────────────────────────────── */
         .nav-right {
           justify-self: end;
           display: flex;
@@ -333,6 +363,7 @@ export default function Home() {
           pointer-events: none;
         }
 
+        /* ── Layout ────────────────────────────────────────────────── */
         .main-wrap {
           padding-top: 68px;
           min-height: 100dvh;
@@ -342,18 +373,96 @@ export default function Home() {
         .inner {
           max-width: 860px;
           margin: 0 auto;
-          padding: 28px 24px 80px;
+          padding: 28px 24px 48px;
+        }
+
+        /* ── Footer ────────────────────────────────────────────────── */
+        .site-footer {
+          position: relative;
+          z-index: 1;
+          border-top: 1px solid rgba(91,91,214,0.10);
+          background: rgba(215,212,205,0.50);
+          backdrop-filter: blur(24px);
+          -webkit-backdrop-filter: blur(24px);
+          padding: 32px 36px 28px;
+        }
+
+        .footer-inner {
+          max-width: 860px;
+          margin: 0 auto;
+          display: grid;
+          grid-template-columns: 1fr auto;
+          align-items: center;
+          gap: 16px;
+        }
+
+        .footer-logo {
+          font-family: 'Space Grotesk', sans-serif;
+          font-weight: 900;
+          font-size: 16px;
+          letter-spacing: -0.4px;
+          color: #0a0a0a;
+          margin-bottom: 4px;
+        }
+
+        .footer-tagline {
+          font-size: 12px;
+          color: rgba(26,26,46,0.38);
+          letter-spacing: 0.01em;
+        }
+
+        .footer-links {
+          display: flex;
+          align-items: center;
+          gap: 24px;
+        }
+
+        .footer-link {
+          font-size: 12px;
+          color: rgba(26,26,46,0.38);
+          text-decoration: none;
+          font-weight: 500;
+          letter-spacing: 0.01em;
+          transition: color 0.18s;
+          cursor: pointer;
+          background: none;
+          border: none;
+          padding: 0;
+          font-family: 'Inter', sans-serif;
+        }
+        .footer-link:hover { color: rgba(26,26,46,0.72); }
+
+        .footer-divider {
+          width: 1px;
+          height: 12px;
+          background: rgba(91,91,214,0.15);
+        }
+
+        .footer-copy {
+          font-size: 11px;
+          color: rgba(26,26,46,0.25);
+          letter-spacing: 0.02em;
+          margin-top: 20px;
+          padding-top: 16px;
+          border-top: 1px solid rgba(91,91,214,0.06);
+          text-align: center;
+          max-width: 860px;
+          margin-left: auto;
+          margin-right: auto;
         }
       `}</style>
 
+      {/* Background orbs */}
       <div className="page-glow" aria-hidden="true" />
+      <div className="orb-mid"   aria-hidden="true" />
 
+      {/* ── Top Bar ─────────────────────────────────────────────────── */}
       <header className="top-bar">
         <div className="logo" onClick={() => setScreen('home')}>Lumora.</div>
 
         <nav className="nav-links">
           {NAV_ITEMS.map(({ screen: s, label }) => {
-            const isActive = screen === s;
+            const isActive   = screen === s;
             const isDisabled = s === 'practice' && !activeDeck;
             return (
               <button
@@ -380,11 +489,12 @@ export default function Home() {
         </div>
       </header>
 
+      {/* ── Main Content ─────────────────────────────────────────────── */}
       <main className="main-wrap">
         <div className="inner">
-          {screen === 'home'      && <Upload onDeckCreated={addDeck} />}
-          {screen === 'decks'     && <Decks decks={decks} onPractice={startPractice} />}
-          {screen === 'practice'  && activeDeck && (
+          {screen === 'home'     && <Upload onDeckCreated={addDeck} />}
+          {screen === 'decks'    && <Decks decks={decks} onPractice={startPractice} />}
+          {screen === 'practice' && activeDeck && (
             <Practice
               deck={activeDeck}
               onFinish={(updatedDeck: Deck) => {
@@ -396,6 +506,26 @@ export default function Home() {
           {screen === 'dashboard' && <Dashboard decks={decks} />}
         </div>
       </main>
+
+      {/* ── Footer ───────────────────────────────────────────────────── */}
+      <footer className="site-footer">
+        <div className="footer-inner">
+          <div>
+            <div className="footer-logo">Lumora.</div>
+            <div className="footer-tagline">Turn any PDF into smart flashcards</div>
+          </div>
+          <nav className="footer-links">
+            <button className="footer-link" onClick={() => setScreen('home')}>Upload</button>
+            <div className="footer-divider" />
+            <button className="footer-link" onClick={() => setScreen('decks')}>Library</button>
+            <div className="footer-divider" />
+            <button className="footer-link" onClick={() => setScreen('dashboard')}>Stats</button>
+          </nav>
+        </div>
+        <p className="footer-copy">
+          © {new Date().getFullYear()} Lumora. Built with Gemini AI &amp; spaced repetition.
+        </p>
+      </footer>
     </>
   );
 }
@@ -441,17 +571,11 @@ export function DropZoneGrid() {
       xmlns="http://www.w3.org/2000/svg"
     >
       <defs>
-        {/*
-          patternUnits="userSpaceOnUse" keeps the 40×40 cell size
-          consistent regardless of how the SVG is scaled.
-          preserveAspectRatio="none" on the root SVG means the grid
-          always fills the drop zone exactly — no matter its size.
-        */}
         <pattern id="evenGrid" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
           <path d="M40 0L0 0 0 40" fill="none" stroke="rgba(91,91,214,0.13)" strokeWidth="0.8"/>
         </pattern>
 
-        {/* Vignette: grid is crisp in the centre, fades to invisible at all four edges */}
+        {/* Vignette: crisp centre, fades to invisible at all four edges */}
         <radialGradient id="gridFade" cx="50%" cy="50%" r="58%">
           <stop offset="0%"   stopColor="white" stopOpacity="1"/>
           <stop offset="55%"  stopColor="white" stopOpacity="0.72"/>
