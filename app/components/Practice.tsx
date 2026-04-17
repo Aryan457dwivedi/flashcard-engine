@@ -270,32 +270,32 @@ export default function Practice({
           role="button"
           aria-label={flipped ? 'Showing answer — click to flip back' : 'Showing question — click to reveal answer'}
         >
-          {/* Question face */}
-          <div className={`card-face face-front${flipped ? ' face-hidden' : ''}`}>
-            <div className="card-side-label tag-q">
-              <span className="side-dot dot-q" />
-              Question
+          {!flipped ? (
+            /* Question face */
+            <div className="card-face face-front">
+              <div className="card-side-label tag-q">
+                <span className="side-dot dot-q" />
+                Question
+              </div>
+              <p className="card-text">{card.question}</p>
+              <div className="card-bottom-hint">
+                <span className="tap-hint">Tap to reveal</span>
+                <span className="kbd-hint"><kbd>Space</kbd> to flip</span>
+              </div>
             </div>
-            <p className="card-text">{card.question}</p>
-            <div className="card-bottom-hint">
-              <span className="tap-hint">Tap to reveal</span>
-              <span className="kbd-hint"><kbd>Space</kbd> to flip</span>
-            </div>
-          </div>
-
-          {/* Answer face */}
-          <div className={`card-face face-back${!flipped ? ' face-hidden' : ''}`}>
-            <div className="card-side-label tag-a">
-              <span className="side-dot dot-a" />
-              Answer
-            </div>
-            <p className="card-text answer-text">{card.answer}</p>
-            {flipped && (
+          ) : (
+            /* Answer face */
+            <div className="card-face face-back">
+              <div className="card-side-label tag-a">
+                <span className="side-dot dot-a" />
+                Answer
+              </div>
+              <p className="card-text answer-text">{card.answer}</p>
               <div className="card-bottom-hint">
                 <span className="kbd-hint">Rate: <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></span>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
         {/* ── Rating buttons ── */}
@@ -548,8 +548,7 @@ const STYLES = `
   border: 1px solid var(--card-border);
   border-radius: var(--radius-card);
   min-height: 300px;
-  display: flex;
-  flex-direction: column;
+  height: 300px;
   cursor: pointer;
   overflow: hidden;
   margin-bottom: 20px;
@@ -601,10 +600,7 @@ const STYLES = `
   padding: 48px 52px 52px;
   text-align: center;
   transition: opacity 0.18s ease;
-}
-.face-hidden {
-  opacity: 0;
-  pointer-events: none;
+  visibility: visible;
 }
 .face-back {
   animation: face-appear 0.22s ease forwards;
