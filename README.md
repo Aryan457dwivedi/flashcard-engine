@@ -1,36 +1,118 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Flashcard Engine
 
-## Getting Started
+A smart flashcard generation system that converts PDFs into high-quality, practice-ready flashcards using AI and applies spaced repetition to improve long-term retention.
 
-First, run the development server:
+https://flashcard-engine-two.vercel.app/
+
+---
+
+## Problem
+
+Most students rely on passive learning methods like re-reading notes, which leads to poor retention.
+
+Research shows that active recall and spaced repetition are far more effective, but tools to apply these methods seamlessly are limited.
+
+---
+
+## Solution
+
+Flashcard Engine allows users to:
+
+- Upload any PDF (notes, chapters, study material)
+- Automatically generate structured flashcards
+- Practice using an adaptive spaced repetition system
+- Focus more on weak areas and retain knowledge longer
+
+---
+
+## Features
+
+- PDF to Flashcards  
+  Extracts key concepts, definitions, relationships, and examples  
+
+- High-Quality Card Generation  
+  Focus on meaningful, teacher-like flashcards instead of shallow AI output  
+
+- Spaced Repetition  
+  Cards adapt based on user performance  
+  Difficult cards appear more frequently  
+
+- Progress-Based Learning  
+  Reinforces strong areas while improving weak ones  
+
+- Fast and Clean UI  
+  Built for a smooth learning experience  
+
+---
+
+## Tech Stack
+
+- Frontend: Next.js, React, Tailwind CSS  
+- Backend: Next.js API Routes  
+- AI Integration: Claude API (Anthropic)  
+- Deployment: Vercel  
+
+---
+
+## How It Works
+
+1. User uploads a PDF  
+2. Content is extracted and processed  
+3. AI generates structured flashcards  
+4. Cards are stored as a deck  
+5. User practices using spaced repetition logic  
+
+---
+
+## Key Decisions and Tradeoffs
+
+- Claude over Gemini  
+  Better structured and context-aware outputs  
+  Tradeoff: Higher API cost  
+
+- Quality over Quantity  
+  Fewer but meaningful flashcards  
+  Avoids overwhelming the user  
+
+- Simplified Spaced Repetition (SM-2 Inspired)  
+  Functional and adaptive  
+  Not fully optimized yet  
+
+---
+
+## Challenges
+
+- PDF Parsing Issues  
+  Solved through improved extraction pipeline  
+
+- Low-Quality AI Outputs Initially  
+  Fixed using better prompt engineering  
+
+- Balancing Card Depth vs Overload  
+  Ensured concise yet meaningful cards  
+
+---
+
+## Future Improvements
+
+- Full SM-2 implementation  
+- Gamification (streaks, rewards)  
+- Deck search and tagging  
+- Multi-language support  
+- Offline support  
+
+---
+
+## Live Demo
+
+https://flashcard-engine-two.vercel.app/
+
+---
+
+## Installation
 
 ```bash
+git clone https://github.com/your-username/flashcard-engine.git
+cd flashcard-engine
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
