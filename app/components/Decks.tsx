@@ -15,16 +15,14 @@ interface Deck {
   created: string;
 }
 
-// ── Must match Practice.tsx sm2 and Dashboard.tsx exactly ────────────────
-// reps === 0        → unseen
-// reps === 1        → learning
-// reps >= 2         → mastered (or struggling if ease < 1.6)
-// reps >= 2, ease < 1.6 → struggling (got there but keeps slipping)
-function classifyCard(c: Card) {
-  if (c.reps === 0) return 'unseen'     as const;
-  if (c.reps === 1) return 'learning'   as const;
-  if (c.ease < 1.6) return 'struggling' as const;
-  return               'mastered'       as const;
+// ── Classification (matches Practice.tsx sm2 and Dashboard.tsx) ─────────
+// mastered  → reps >= 2 AND ease >= 1.6
+// learning  → reps === 1
+// struggling → everything else: unseen (reps=0), low-ease (ease<1.6), due (interval<=1)
+function classifyCard(c: Card): 'mastered' | 'learning' | 'struggling' {
+  if (c.reps >= 2 && c.ease >= 1.6) return 'mastered';
+  if (c.reps === 1)                  return 'learning';
+  return                                    'struggling';
 }
 
 function deckStats(deck: Deck) {
@@ -32,16 +30,14 @@ function deckStats(deck: Deck) {
   const mastered   = deck.cards.filter(c => classifyCard(c) === 'mastered').length;
   const learning   = deck.cards.filter(c => classifyCard(c) === 'learning').length;
   const struggling = deck.cards.filter(c => classifyCard(c) === 'struggling').length;
-  const unseen     = deck.cards.filter(c => classifyCard(c) === 'unseen').length;
-  const due        = deck.cards.filter(c => c.reps > 0 && c.interval <= 1).length;
   const mastPct    = total > 0 ? Math.round((mastered / total) * 100) : 0;
-  const seenPct    = total > 0 ? Math.round(((total - unseen) / total) * 100) : 0;
-  return { total, mastered, learning, struggling, unseen, due, mastPct, seenPct };
+  const practicedPct = total > 0 ? Math.round(((mastered + learning) / total) * 100) : 0;
+  return { total, mastered, learning, struggling, mastPct, practicedPct };
 }
 
-// ── Stacked progress bar ─────────────────────────────────────────────────
-function StackBar({ mastered, learning, struggling, unseen, total }: {
-  mastered: number; learning: number; struggling: number; unseen: number; total: number;
+// ── Stacked progress bar (3 buckets) ────────────────────────────────────
+function StackBar({ mastered, learning, struggling, total }: {
+  mastered: number; learning: number; struggling: number; total: number;
 }) {
   const pct = (n: number) => total > 0 ? (n / total) * 100 : 0;
   return (
@@ -49,7 +45,6 @@ function StackBar({ mastered, learning, struggling, unseen, total }: {
       {mastered   > 0 && <div style={{ width: `${pct(mastered)}%`,   background: '#1D9E75', transition: 'width 0.7s ease' }} />}
       {learning   > 0 && <div style={{ width: `${pct(learning)}%`,   background: '#7F77DD', transition: 'width 0.7s ease' }} />}
       {struggling > 0 && <div style={{ width: `${pct(struggling)}%`, background: '#E24B4A', transition: 'width 0.7s ease' }} />}
-      {unseen     > 0 && <div style={{ width: `${pct(unseen)}%`,     background: 'rgba(26,26,46,0.10)', transition: 'width 0.7s ease' }} />}
     </div>
   );
 }
@@ -97,8 +92,6 @@ export default function Decks({
   const gMastered  = allCards.filter(c => classifyCard(c) === 'mastered').length;
   const gLearning  = allCards.filter(c => classifyCard(c) === 'learning').length;
   const gStruggle  = allCards.filter(c => classifyCard(c) === 'struggling').length;
-  const gUnseen    = allCards.filter(c => classifyCard(c) === 'unseen').length;
-  const gDue       = allCards.filter(c => c.reps > 0 && c.interval <= 1).length;
   const gMastPct   = totalCards > 0 ? Math.round((gMastered / totalCards) * 100) : 0;
 
   return (
@@ -125,7 +118,6 @@ export default function Decks({
           { label: 'Mastered',   val: gMastered, color: '#0F6E56', bg: '#E1F5EE', border: '#9FE1CB' },
           { label: 'Learning',   val: gLearning, color: '#534AB7', bg: '#EEEDFE', border: '#AFA9EC' },
           { label: 'Struggling', val: gStruggle, color: '#A32D2D', bg: '#FCEBEB', border: '#F7C1C1' },
-          { label: 'Due now',    val: gDue,      color: '#854F0B', bg: '#FAEEDA', border: '#FAC775' },
         ].map(({ label, val, color, bg, border }) => (
           <div key={label} style={{
             background: bg,
@@ -155,29 +147,23 @@ export default function Decks({
 
           // Status label
           const statusLabel =
-            s.seenPct === 0    ? 'Not started' :
-            s.mastPct >= 80    ? 'Nearly mastered' :
-            s.mastPct >= 40    ? 'In progress' :
-            s.due > 0          ? `${s.due} due` :
-                                 'Just started';
+            s.mastered === 0 && s.learning === 0 ? 'Not started' :
+            s.mastPct >= 80                       ? 'Nearly mastered' :
+            s.mastPct >= 40                       ? 'In progress' :
+                                                    'Just started';
           const statusColor =
-            s.seenPct === 0    ? '#888780' :
-            s.mastPct >= 80    ? '#0F6E56' :
-            s.mastPct >= 40    ? '#534AB7' :
-            s.due > 0          ? '#854F0B' :
-                                 '#534AB7';
+            s.mastered === 0 && s.learning === 0 ? '#888780' :
+            s.mastPct >= 80                       ? '#0F6E56' :
+            s.mastPct >= 40                       ? '#534AB7' :
+                                                    '#534AB7';
           const statusBg =
-            s.seenPct === 0    ? '#F1EFE8' :
-            s.mastPct >= 80    ? '#E1F5EE' :
-            s.mastPct >= 40    ? '#EEEDFE' :
-            s.due > 0          ? '#FAEEDA' :
-                                 '#EEEDFE';
+            s.mastered === 0 && s.learning === 0 ? '#F1EFE8' :
+            s.mastPct >= 80                       ? '#E1F5EE' :
+                                                    '#EEEDFE';
           const statusBorder =
-            s.seenPct === 0    ? '#D3D1C7' :
-            s.mastPct >= 80    ? '#9FE1CB' :
-            s.mastPct >= 40    ? '#AFA9EC' :
-            s.due > 0          ? '#FAC775' :
-                                 '#AFA9EC';
+            s.mastered === 0 && s.learning === 0 ? '#D3D1C7' :
+            s.mastPct >= 80                       ? '#9FE1CB' :
+                                                    '#AFA9EC';
 
           return (
             <div
@@ -245,12 +231,11 @@ export default function Decks({
                   mastered={s.mastered}
                   learning={s.learning}
                   struggling={s.struggling}
-                  unseen={s.unseen}
                   total={s.total}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '7px' }}>
                   <span style={{ fontSize: '11px', color: 'rgba(15,15,26,0.35)' }}>
-                    {s.seenPct}% seen
+                    {s.practicedPct}% practiced
                   </span>
                   <span style={{
                     fontSize: '11px',
@@ -268,7 +253,6 @@ export default function Decks({
                   { val: s.mastered,   label: 'mastered',   color: '#0F6E56', bg: '#E1F5EE', border: '#9FE1CB' },
                   { val: s.learning,   label: 'learning',   color: '#534AB7', bg: '#EEEDFE', border: '#AFA9EC' },
                   { val: s.struggling, label: 'struggling', color: '#A32D2D', bg: '#FCEBEB', border: '#F7C1C1' },
-                  { val: s.unseen,     label: 'unseen',     color: '#5F5E5A', bg: '#F1EFE8', border: '#D3D1C7' },
                 ].filter(p => p.val > 0).map(({ val, label, color, bg, border }) => (
                   <span key={label} style={{
                     fontSize: '11.5px',
@@ -316,7 +300,7 @@ export default function Decks({
                   (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none';
                 }}
               >
-                {s.due > 0 ? `Practice · ${s.due} due` : s.seenPct === 0 ? 'Start Practicing' : 'Practice Now'}
+                {s.mastered === 0 && s.learning === 0 ? 'Start Practicing' : 'Practice Now'}
               </button>
             </div>
           );
