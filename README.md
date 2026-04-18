@@ -12,7 +12,6 @@ Most students rely on passive learning methods like re-reading notes, which lead
 
 Research shows that active recall and spaced repetition are far more effective, but tools to apply these methods seamlessly are limited.
 
----
 
 ## Solution
 
@@ -23,7 +22,7 @@ Flashcard Engine allows users to:
 - Practice using an adaptive spaced repetition system
 - Focus more on weak areas and retain knowledge longer
 
----
+
 
 ## Features
 
@@ -43,7 +42,7 @@ Flashcard Engine allows users to:
 - Fast and Clean UI  
   Built for a smooth learning experience  
 
----
+
 
 ## Tech Stack
 
@@ -52,7 +51,7 @@ Flashcard Engine allows users to:
 - AI Integration: Claude API (Anthropic)  
 - Deployment: Vercel  
 
----
+
 
 ## How It Works
 
@@ -62,7 +61,7 @@ Flashcard Engine allows users to:
 4. Cards are stored as a deck  
 5. User practices using spaced repetition logic  
 
----
+
 
 ## Key Decisions and Tradeoffs
 
@@ -78,7 +77,7 @@ Flashcard Engine allows users to:
   Functional and adaptive  
   Not fully optimized yet  
 
----
+
 
 ## Challenges
 
@@ -91,7 +90,7 @@ Flashcard Engine allows users to:
 - Balancing Card Depth vs Overload  
   Ensured concise yet meaningful cards  
 
----
+
 
 ## Future Improvements
 
@@ -101,7 +100,6 @@ Flashcard Engine allows users to:
 - Multi-language support  
 - Offline support  
 
----
 
 ## Live Demo
 
