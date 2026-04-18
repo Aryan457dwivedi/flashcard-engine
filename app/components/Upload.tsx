@@ -1,6 +1,36 @@
 'use client';
 import { useState } from 'react';
-import { DropZoneGrid } from '../page';
+/* Inline grid — no corner brackets, no crosshair */
+function DropZoneGrid() {
+  return (
+    <svg
+      style={{
+        position: 'absolute', inset: 0,
+        width: '100%', height: '100%',
+        borderRadius: '18px',
+        pointerEvents: 'none', zIndex: 1,
+      }}
+      viewBox="0 0 600 260"
+      preserveAspectRatio="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <defs>
+        <pattern id="uploadGrid" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+          <path d="M40 0L0 0 0 40" fill="none" stroke="rgba(91,91,214,0.13)" strokeWidth="0.8"/>
+        </pattern>
+        <radialGradient id="uploadFade" cx="50%" cy="50%" r="58%">
+          <stop offset="0%"   stopColor="white" stopOpacity="1"/>
+          <stop offset="55%"  stopColor="white" stopOpacity="0.72"/>
+          <stop offset="100%" stopColor="white" stopOpacity="0"/>
+        </radialGradient>
+        <mask id="uploadMask">
+          <rect width="600" height="260" fill="url(#uploadFade)"/>
+        </mask>
+      </defs>
+      <rect width="600" height="260" fill="url(#uploadGrid)" mask="url(#uploadMask)"/>
+    </svg>
+  );
+}
 
 interface Card {
   question: string;
