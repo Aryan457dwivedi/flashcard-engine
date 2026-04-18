@@ -15,10 +15,6 @@ interface Deck {
   created: string;
 }
 
-// ── Classification (matches Practice.tsx sm2 and Dashboard.tsx) ─────────
-// mastered  → reps >= 2 AND ease >= 1.6
-// learning  → reps === 1
-// struggling → everything else: unseen (reps=0), low-ease (ease<1.6), due (interval<=1)
 function classifyCard(c: Card): 'mastered' | 'learning' | 'struggling' {
   if (c.reps >= 2 && c.ease >= 1.6) return 'mastered';
   if (c.reps === 1)                  return 'learning';
@@ -35,7 +31,6 @@ function deckStats(deck: Deck) {
   return { total, mastered, learning, struggling, mastPct, practicedPct };
 }
 
-// ── Stacked progress bar (3 buckets) ────────────────────────────────────
 function StackBar({ mastered, learning, struggling, total }: {
   mastered: number; learning: number; struggling: number; total: number;
 }) {
@@ -57,7 +52,6 @@ export default function Decks({
   onPractice: (deck: Deck) => void;
 }) {
 
-  /* ── Empty state ──────────────────────────────────────────────────── */
   if (decks.length === 0) {
     return (
       <div style={{ textAlign: 'center', padding: '6rem 0', fontFamily: "'DM Sans', sans-serif" }} className="fade-up">
@@ -86,13 +80,8 @@ export default function Decks({
     );
   }
 
-  /* ── Global summary ───────────────────────────────────────────────── */
   const allCards   = decks.flatMap(d => d.cards);
   const totalCards = allCards.length;
-  const gMastered  = allCards.filter(c => classifyCard(c) === 'mastered').length;
-  const gLearning  = allCards.filter(c => classifyCard(c) === 'learning').length;
-  const gStruggle  = allCards.filter(c => classifyCard(c) === 'struggling').length;
-  const gMastPct   = totalCards > 0 ? Math.round((gMastered / totalCards) * 100) : 0;
 
   return (
     <div className="fade-up" style={{ fontFamily: "'DM Sans', sans-serif" }}>
@@ -107,35 +96,6 @@ export default function Decks({
         </p>
       </div>
 
-      {/* ── Global stat strip ── */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(4, 1fr)',
-        gap: '10px',
-        marginBottom: '20px',
-      }}>
-        {[
-          { label: 'Mastered',   val: gMastered, color: '#0F6E56', bg: '#E1F5EE', border: '#9FE1CB' },
-          { label: 'Learning',   val: gLearning, color: '#534AB7', bg: '#EEEDFE', border: '#AFA9EC' },
-          { label: 'Struggling', val: gStruggle, color: '#A32D2D', bg: '#FCEBEB', border: '#F7C1C1' },
-        ].map(({ label, val, color, bg, border }) => (
-          <div key={label} style={{
-            background: bg,
-            border: `1px solid ${border}`,
-            borderRadius: '14px',
-            padding: '14px 16px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-          }}>
-            <div style={{ fontSize: '1.6rem', fontWeight: '600', color, lineHeight: 1 }}>{val}</div>
-            <div style={{ fontSize: '11.5px', fontWeight: '500', color, opacity: 0.75, textTransform: 'uppercase', letterSpacing: '0.06em', lineHeight: 1.3 }}>
-              {label}
-            </div>
-          </div>
-        ))}
-      </div>
-
       {/* ── Deck cards ── */}
       <div style={{
         display: 'grid',
@@ -145,7 +105,6 @@ export default function Decks({
         {decks.map(deck => {
           const s = deckStats(deck);
 
-          // Status label
           const statusLabel =
             s.mastered === 0 && s.learning === 0 ? 'Not started' :
             s.mastPct >= 80                       ? 'Nearly mastered' :
@@ -209,7 +168,6 @@ export default function Decks({
                     {s.total} cards · {new Date(deck.created).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                   </p>
                 </div>
-                {/* Status badge */}
                 <span style={{
                   fontSize: '11px',
                   fontWeight: '600',
