@@ -106,5 +106,3 @@ Flashcard Engine allows users to:
 ## Live Demo
 
 https://flashcard-engine-two.vercel.app/
-
----
