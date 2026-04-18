@@ -92,9 +92,12 @@ export default function Home() {
 
   const updateDeck = (updatedDeck: Deck) => {
     setDecks(prev => prev.map(d => d.id === updatedDeck.id ? updatedDeck : d));
+    // Keep activeDeck in sync so re-practicing uses updated card data
+    setActiveDeck(prev => prev?.id === updatedDeck.id ? updatedDeck : prev);
   };
 
   const startPractice = (deck: Deck) => {
+    // Always use the latest deck from state, not a stale reference
     setActiveDeck(deck);
     setScreen('practice');
   };
@@ -567,7 +570,7 @@ export default function Home() {
             <div className="footer-logo">Lumora.</div>
             <div className="footer-tagline">
               <TextGenerateEffect
-                words=".pdf into AI flashcards"
+                words="Turn any PDF into smart flashcards"
                 duration={0.4}
                 staggerDelay={0.10}
               />
@@ -582,7 +585,7 @@ export default function Home() {
           </nav>
         </div>
         <p className="footer-copy">
-          © {new Date().getFullYear()} Lumora. Enhancing learning through spaced repetition.
+          © {new Date().getFullYear()} Lumora. Built with Gemini AI &amp; spaced repetition.
         </p>
       </footer>
     </>
