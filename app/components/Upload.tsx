@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 /* ── Same TextGenerateEffect as page.tsx ─────────────────────────────── */
 function TextGenerateEffect({
@@ -8,12 +8,14 @@ function TextGenerateEffect({
   filter = true,
   duration = 0.5,
   staggerDelay = 0.12,
+  gradientStyle,
 }: {
   words: string;
   className?: string;
   filter?: boolean;
   duration?: number;
   staggerDelay?: number;
+  gradientStyle?: React.CSSProperties;
 }) {
   const wordsArray = words.split(' ');
   const [visibleCount, setVisibleCount] = useState(0);
@@ -43,6 +45,7 @@ function TextGenerateEffect({
               transition: `opacity ${duration}s ease, filter ${duration}s ease`,
               display: 'inline-block',
               marginRight: '0.28em',
+              ...(gradientStyle ?? {}),
             }}
           >
             {word}
@@ -154,13 +157,19 @@ export default function Upload({ onDeckCreated }: { onDeckCreated: (deck: Deck) 
             background: 'linear-gradient(90deg, #6366f1, #a78bfa)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            display: 'inline-block',
+            animation: 'hero-gradient-in 0.8s ease 0.8s forwards',
+            opacity: 0,
           }}>
-            <TextGenerateEffect
-              words="smart flashcards"
-              duration={0.4}
-              staggerDelay={0.10}
-            />
+            smart flashcards
           </span>
+          <style>{`
+            @keyframes hero-gradient-in {
+              0%   { opacity: 0; filter: blur(8px); }
+              100% { opacity: 1; filter: blur(0px); }
+            }
+          `}</style>
         </h1>
         <p style={{
           color: 'rgba(26,26,46,0.5)',
