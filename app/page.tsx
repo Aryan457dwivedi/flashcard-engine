@@ -478,7 +478,7 @@ export default function Home() {
 
         .footer-link {
           font-size: 12px;
-          color: rgba(26,26,46,0.38);
+          color: rgba(26,26,46,0.62);
           text-decoration: none;
           font-weight: 500;
           letter-spacing: 0.01em;
@@ -489,7 +489,7 @@ export default function Home() {
           padding: 0;
           font-family: 'Inter', sans-serif;
         }
-        .footer-link:hover { color: rgba(26,26,46,0.72); }
+        .footer-link:hover { color: rgba(26,26,46,0.88); }
 
         .footer-divider {
           width: 1px;
@@ -499,7 +499,7 @@ export default function Home() {
 
         .footer-copy {
           font-size: 11px;
-          color: rgba(26,26,46,0.25);
+          color: rgba(26,26,46,0.50);
           letter-spacing: 0.02em;
           margin-top: 20px;
           padding-top: 16px;
