@@ -67,23 +67,36 @@ export default function Practice({
   deck: Deck;
   onFinish: (updatedDeck: Deck) => void;
 }) {
-  const [cards, setCards] = useState<Card[]>(
-    deck.cards.map(c => ({
+  const initCards = (src: Card[]) =>
+    src.map(c => ({
       ...c,
-      ease: c.ease || 2.5,
+      ease:     c.ease     || 2.5,
       interval: c.interval || 1,
-      reps: c.reps || 0,
-    }))
-  );
+      reps:     c.reps     || 0,
+    }));
+
+  const [cards, setCards] = useState<Card[]>(() => initCards(deck.cards));
   const [current, setCurrent] = useState(0);
   const [flipped, setFlipped] = useState(false);
-  // Track per-card quality given this session: index -> quality
   const [sessionRatings, setSessionRatings] = useState<Record<number, number>>({});
   const [session, setSession] = useState({ correct: 0, incorrect: 0 });
   const [animDir, setAnimDir] = useState<'in' | 'out-left' | 'out-right'>('in');
   const [streakFlash, setStreakFlash] = useState(false);
   const [showKeyHint, setShowKeyHint] = useState(true);
   const cardRef = useRef<HTMLDivElement>(null);
+
+  // Re-initialize when deck changes — critical so re-practicing a deck
+  // picks up the updated reps/ease/interval from the previous session.
+  useEffect(() => {
+    setCards(initCards(deck.cards));
+    setCurrent(0);
+    setFlipped(false);
+    setSessionRatings({});
+    setSession({ correct: 0, incorrect: 0 });
+    setAnimDir('in');
+    setShowKeyHint(true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deck.id]);
 
   const card = cards[current];
   const done = current >= cards.length;
