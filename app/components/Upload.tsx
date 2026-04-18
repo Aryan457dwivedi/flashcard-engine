@@ -217,7 +217,7 @@ export default function Upload({ onDeckCreated }: { onDeckCreated: (deck: Deck) 
                 Generating flashcards...
               </p>
               <p style={{ color: 'rgba(26,26,46,0.4)', fontSize: '0.875rem' }}>
-                This usually takes 20–30 seconds
+                This usually takes 5–10 seconds
               </p>
             </div>
           ) : (
@@ -270,7 +270,7 @@ export default function Upload({ onDeckCreated }: { onDeckCreated: (deck: Deck) 
         margin: '0 auto',
       }}>
         {[
-          ['Smart Extraction', 'Gemini AI identifies key concepts, definitions, and relationships from your material.'],
+          ['Smart Extraction', 'Automatically extracts key concepts, definitions, and relationships to simplify learning.'],
           ['Spaced Repetition', 'The SM-2 algorithm surfaces hard cards more often so you learn faster.'],
           ['Track Mastery', 'See exactly what you know, what needs work, and what is coming up for review.'],
         ].map(([title, desc]) => (
