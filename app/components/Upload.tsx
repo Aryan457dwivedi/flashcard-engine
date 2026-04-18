@@ -1,6 +1,59 @@
 'use client';
-import { useState } from 'react';
-/* Inline grid — no corner brackets, no crosshair */
+import { useState, useEffect, useRef } from 'react';
+
+/* ── Same TextGenerateEffect as page.tsx ─────────────────────────────── */
+function TextGenerateEffect({
+  words,
+  className,
+  filter = true,
+  duration = 0.5,
+  staggerDelay = 0.12,
+}: {
+  words: string;
+  className?: string;
+  filter?: boolean;
+  duration?: number;
+  staggerDelay?: number;
+}) {
+  const wordsArray = words.split(' ');
+  const [visibleCount, setVisibleCount] = useState(0);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    setVisibleCount(0);
+    let index = 0;
+    intervalRef.current = setInterval(() => {
+      index += 1;
+      setVisibleCount(index);
+      if (index >= wordsArray.length) clearInterval(intervalRef.current!);
+    }, staggerDelay * 1000);
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+  }, [words]);
+
+  return (
+    <span className={className} style={{ display: 'inline' }}>
+      {wordsArray.map((word, idx) => {
+        const visible = idx < visibleCount;
+        return (
+          <span
+            key={word + idx}
+            style={{
+              opacity: visible ? 1 : 0,
+              filter: filter ? (visible ? 'blur(0px)' : 'blur(8px)') : 'none',
+              transition: `opacity ${duration}s ease, filter ${duration}s ease`,
+              display: 'inline-block',
+              marginRight: '0.28em',
+            }}
+          >
+            {word}
+          </span>
+        );
+      })}
+    </span>
+  );
+}
+
+/* ── Inline grid — no corner brackets, no crosshair ─────────────────── */
 function DropZoneGrid() {
   return (
     <svg
@@ -91,13 +144,22 @@ export default function Upload({ onDeckCreated }: { onDeckCreated: (deck: Deck) 
           marginBottom: '1.25rem',
           color: '#1a1a2e',
         }}>
-          Turn any PDF into<br />
+          <TextGenerateEffect
+            words="Turn any PDF into"
+            duration={0.4}
+            staggerDelay={0.10}
+          />
+          <br />
           <span style={{
             background: 'linear-gradient(90deg, #6366f1, #a78bfa)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
           }}>
-            smart flashcards
+            <TextGenerateEffect
+              words="smart flashcards"
+              duration={0.4}
+              staggerDelay={0.10}
+            />
           </span>
         </h1>
         <p style={{
@@ -118,8 +180,8 @@ export default function Upload({ onDeckCreated }: { onDeckCreated: (deck: Deck) 
         onDrop={(e) => { e.preventDefault(); setDragging(false); handleFile(e.dataTransfer.files[0]); }}
         onClick={() => !loading && document.getElementById('fileInput')?.click()}
         style={{
-          position: 'relative',        // ← needed for grid SVG to anchor to
-          overflow: 'hidden',           // ← clips the SVG to the rounded corners
+          position: 'relative',
+          overflow: 'hidden',
           border: `2px dashed ${dragging ? '#6366f1' : 'rgba(99,102,241,0.2)'}`,
           borderRadius: '20px',
           padding: '4rem 2rem',
