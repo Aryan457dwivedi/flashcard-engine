@@ -15,16 +15,14 @@ interface Deck {
   created: string;
 }
 
-// ── Card classification (must match Practice.tsx sm2 logic) ──────────────
-// reps === 0  → unseen
-// reps === 1  → learning (shaky)
-// reps >= 2   → mastered
-// ease < 1.6  → struggling (mastered but low ease factor = frequently missed)
-function classifyCard(c: Card) {
-  if (c.reps === 0)       return 'unseen'     as const;
-  if (c.reps === 1)       return 'learning'   as const;
-  if (c.ease < 1.6)       return 'struggling' as const;
-  return                         'mastered'   as const;
+// ── Card classification ─────────────────────────────────────────────────
+// mastered   → reps >= 2 AND ease >= 1.6
+// learning   → reps === 1
+// struggling → everything else (unseen, low-ease, due) — merged into one bucket
+function classifyCard(c: Card): 'mastered' | 'learning' | 'struggling' {
+  if (c.reps >= 2 && c.ease >= 1.6) return 'mastered';
+  if (c.reps === 1)                  return 'learning';
+  return                                    'struggling';
 }
 
 // ── Deck-level helpers ────────────────────────────────────────────────────
@@ -33,21 +31,16 @@ function deckStats(deck: Deck) {
   const mastered   = deck.cards.filter(c => classifyCard(c) === 'mastered').length;
   const learning   = deck.cards.filter(c => classifyCard(c) === 'learning').length;
   const struggling = deck.cards.filter(c => classifyCard(c) === 'struggling').length;
-  const unseen     = deck.cards.filter(c => classifyCard(c) === 'unseen').length;
-  const seen       = total - unseen;
   const mastPct    = total > 0 ? Math.round((mastered / total) * 100) : 0;
-  const seenPct    = total > 0 ? Math.round((seen / total) * 100) : 0;
+  const practicedPct = total > 0 ? Math.round(((mastered + learning) / total) * 100) : 0;
 
-  // Average ease of seen cards (higher = easier)
-  const seenCards  = deck.cards.filter(c => c.reps > 0);
-  const avgEase    = seenCards.length > 0
-    ? seenCards.reduce((s, c) => s + c.ease, 0) / seenCards.length
+  // Average ease of practiced cards
+  const practicedCards = deck.cards.filter(c => c.reps > 0);
+  const avgEase = practicedCards.length > 0
+    ? practicedCards.reduce((s, c) => s + c.ease, 0) / practicedCards.length
     : 2.5;
 
-  // "Due for review" = seen but interval expired (we use interval=1 as proxy for overdue)
-  const dueCount   = deck.cards.filter(c => c.reps > 0 && c.interval <= 1).length;
-
-  return { total, mastered, learning, struggling, unseen, seen, mastPct, seenPct, avgEase, dueCount };
+  return { total, mastered, learning, struggling, mastPct, practicedPct, avgEase };
 }
 
 // ── Radial progress ring ──────────────────────────────────────────────────
@@ -74,9 +67,9 @@ function Ring({ pct, color, size = 64 }: { pct: number; color: string; size?: nu
   );
 }
 
-// ── Stacked bar ───────────────────────────────────────────────────────────
-function StackBar({ mastered, learning, struggling, unseen, total }: {
-  mastered: number; learning: number; struggling: number; unseen: number; total: number;
+// ── Stacked bar (3 buckets) ───────────────────────────────────────────────
+function StackBar({ mastered, learning, struggling, total }: {
+  mastered: number; learning: number; struggling: number; total: number;
 }) {
   const pct = (n: number) => total > 0 ? (n / total) * 100 : 0;
   return (
@@ -84,7 +77,6 @@ function StackBar({ mastered, learning, struggling, unseen, total }: {
       {mastered   > 0 && <div style={{ width: `${pct(mastered)}%`,   background: '#1D9E75', transition: 'width 0.7s ease' }} />}
       {learning   > 0 && <div style={{ width: `${pct(learning)}%`,   background: '#7F77DD', transition: 'width 0.7s ease' }} />}
       {struggling > 0 && <div style={{ width: `${pct(struggling)}%`, background: '#E24B4A', transition: 'width 0.7s ease' }} />}
-      {unseen     > 0 && <div style={{ width: `${pct(unseen)}%`,     background: 'rgba(26,26,46,0.12)', transition: 'width 0.7s ease' }} />}
     </div>
   );
 }
@@ -120,18 +112,16 @@ function EaseGauge({ ease }: { ease: number }) {
 export default function Dashboard({ decks }: { decks: Deck[] }) {
 
   // ── Global stats ──────────────────────────────────────────────────────
-  const allCards   = decks.flatMap(d => d.cards);
-  const total      = allCards.length;
-  const mastered   = allCards.filter(c => classifyCard(c) === 'mastered').length;
-  const learning   = allCards.filter(c => classifyCard(c) === 'learning').length;
-  const struggling = allCards.filter(c => classifyCard(c) === 'struggling').length;
-  const unseen     = allCards.filter(c => classifyCard(c) === 'unseen').length;
-  const dueTotal   = allCards.filter(c => c.reps > 0 && c.interval <= 1).length;
-  const mastPct    = total > 0 ? Math.round((mastered / total) * 100) : 0;
-  const seenPct    = total > 0 ? Math.round(((total - unseen) / total) * 100) : 0;
-  const seenCards  = allCards.filter(c => c.reps > 0);
-  const globalEase = seenCards.length > 0
-    ? seenCards.reduce((s, c) => s + c.ease, 0) / seenCards.length
+  const allCards     = decks.flatMap(d => d.cards);
+  const total        = allCards.length;
+  const mastered     = allCards.filter(c => classifyCard(c) === 'mastered').length;
+  const learning     = allCards.filter(c => classifyCard(c) === 'learning').length;
+  const struggling   = allCards.filter(c => classifyCard(c) === 'struggling').length;
+  const mastPct      = total > 0 ? Math.round((mastered / total) * 100) : 0;
+  const practicedPct = total > 0 ? Math.round(((mastered + learning) / total) * 100) : 0;
+  const practicedCards = allCards.filter(c => c.reps > 0);
+  const globalEase   = practicedCards.length > 0
+    ? practicedCards.reduce((s, c) => s + c.ease, 0) / practicedCards.length
     : 2.5;
 
   // ── Empty state ────────────────────────────────────────────────────────
@@ -175,12 +165,11 @@ export default function Dashboard({ decks }: { decks: Deck[] }) {
       </div>
 
       {/* ── Top stat row ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '14px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '14px' }}>
         {[
-          { label: 'Mastered',    val: mastered,   color: '#1D9E75', bg: '#E1F5EE', border: '#9FE1CB', icon: '✓' },
-          { label: 'Learning',    val: learning,   color: '#7F77DD', bg: '#EEEDFE', border: '#AFA9EC', icon: '~' },
-          { label: 'Struggling',  val: struggling, color: '#E24B4A', bg: '#FCEBEB', border: '#F7C1C1', icon: '↺' },
-          { label: 'Unseen',      val: unseen,     color: '#888780', bg: '#F1EFE8', border: '#D3D1C7', icon: '○' },
+          { label: 'Mastered',   val: mastered,   color: '#1D9E75', bg: '#E1F5EE', border: '#9FE1CB', icon: '✓' },
+          { label: 'Learning',   val: learning,   color: '#7F77DD', bg: '#EEEDFE', border: '#AFA9EC', icon: '~' },
+          { label: 'Struggling', val: struggling, color: '#E24B4A', bg: '#FCEBEB', border: '#F7C1C1', icon: '↺' },
         ].map(({ label, val, color, bg, border, icon }) => (
           <div key={label} style={{
             background: bg,
@@ -234,13 +223,12 @@ export default function Dashboard({ decks }: { decks: Deck[] }) {
             <div style={{ fontSize: '12px', color: 'rgba(15,15,26,0.4)', marginBottom: '14px' }}>
               {mastered} of {total} cards mastered
             </div>
-            <StackBar mastered={mastered} learning={learning} struggling={struggling} unseen={unseen} total={total} />
+            <StackBar mastered={mastered} learning={learning} struggling={struggling} total={total} />
             <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
               {[
                 ['#1D9E75', 'Mastered'],
                 ['#7F77DD', 'Learning'],
                 ['#E24B4A', 'Struggling'],
-                ['rgba(26,26,46,0.2)', 'Unseen'],
               ].map(([color, label]) => (
                 <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: color, flexShrink: 0 }} />
@@ -251,7 +239,7 @@ export default function Dashboard({ decks }: { decks: Deck[] }) {
           </div>
         </div>
 
-        {/* Due for review + ease */}
+        {/* Retention ease */}
         <div style={{
           background: 'rgba(255,255,255,0.88)',
           border: '1px solid rgba(127,119,221,0.13)',
@@ -263,31 +251,30 @@ export default function Dashboard({ decks }: { decks: Deck[] }) {
         }}>
           <div>
             <div style={{ fontSize: '13px', fontWeight: '600', color: '#0f0f1a', marginBottom: '4px' }}>
-              Ready to Review
+              Retention Ease
             </div>
             <div style={{ fontSize: '12px', color: 'rgba(15,15,26,0.4)', marginBottom: '20px' }}>
-              Cards whose interval has elapsed
+              How easily you recall practiced cards
             </div>
           </div>
-
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
             <div>
-              <div style={{ fontSize: '3rem', fontWeight: '600', color: dueTotal > 0 ? '#BA7517' : '#1D9E75', lineHeight: 1 }}>
-                {dueTotal}
+              <div style={{ fontSize: '3rem', fontWeight: '600', color: '#534AB7', lineHeight: 1 }}>
+                {practicedPct}%
               </div>
               <div style={{ fontSize: '12px', color: 'rgba(15,15,26,0.4)', marginTop: '4px' }}>
-                {dueTotal === 0 ? 'All caught up!' : `card${dueTotal !== 1 ? 's' : ''} due now`}
+                cards practiced
               </div>
             </div>
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontSize: '11px', color: 'rgba(15,15,26,0.4)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                Retention ease
+                Ease factor
               </div>
               <div style={{ width: '140px' }}>
                 <EaseGauge ease={globalEase} />
               </div>
               <div style={{ fontSize: '11px', color: 'rgba(15,15,26,0.35)', marginTop: '4px' }}>
-                avg ease factor: {globalEase.toFixed(2)}
+                avg: {globalEase.toFixed(2)}
               </div>
             </div>
           </div>
@@ -312,7 +299,7 @@ export default function Dashboard({ decks }: { decks: Deck[] }) {
           </div>
           {/* Legend */}
           <div style={{ display: 'flex', gap: '14px' }}>
-            {[['#1D9E75', 'Mastered'], ['#7F77DD', 'Learning'], ['#E24B4A', 'Struggling'], ['rgba(26,26,46,0.15)', 'Unseen']].map(([c, l]) => (
+            {[['#1D9E75', 'Mastered'], ['#7F77DD', 'Learning'], ['#E24B4A', 'Struggling']].map(([c, l]) => (
               <div key={l} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                 <div style={{ width: '8px', height: '8px', borderRadius: '2px', background: c, flexShrink: 0 }} />
                 <span style={{ fontSize: '11px', color: 'rgba(15,15,26,0.4)' }}>{l}</span>
@@ -324,13 +311,13 @@ export default function Dashboard({ decks }: { decks: Deck[] }) {
         {/* Table header */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: '200px 1fr 80px 80px 80px 130px',
+          gridTemplateColumns: '200px 1fr 80px 80px 130px',
           gap: '12px',
           padding: '0 4px 10px',
           borderBottom: '1px solid rgba(15,15,26,0.07)',
           marginBottom: '4px',
         }}>
-          {['Deck', 'Progress', 'Mastered', 'Due', 'Cards', 'Ease'].map(h => (
+          {['Deck', 'Progress', 'Mastered', 'Cards', 'Ease'].map(h => (
             <div key={h} style={{ fontSize: '11px', fontWeight: '600', color: 'rgba(15,15,26,0.35)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
               {h}
             </div>
@@ -344,7 +331,7 @@ export default function Dashboard({ decks }: { decks: Deck[] }) {
             return (
               <div key={deck.id} style={{
                 display: 'grid',
-                gridTemplateColumns: '200px 1fr 80px 80px 80px 130px',
+                gridTemplateColumns: '200px 1fr 80px 80px 130px',
                 gap: '12px',
                 alignItems: 'center',
                 padding: '14px 4px',
@@ -370,11 +357,10 @@ export default function Dashboard({ decks }: { decks: Deck[] }) {
                     mastered={s.mastered}
                     learning={s.learning}
                     struggling={s.struggling}
-                    unseen={s.unseen}
                     total={s.total}
                   />
                   <div style={{ fontSize: '10px', color: 'rgba(15,15,26,0.3)', marginTop: '4px' }}>
-                    {s.seenPct}% seen
+                    {s.practicedPct}% practiced
                   </div>
                 </div>
 
@@ -389,17 +375,6 @@ export default function Dashboard({ decks }: { decks: Deck[] }) {
                   <div style={{ fontSize: '10px', color: 'rgba(15,15,26,0.3)' }}>{s.mastered} cards</div>
                 </div>
 
-                {/* Due */}
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{
-                    fontSize: '15px', fontWeight: '600',
-                    color: s.dueCount > 0 ? '#BA7517' : '#1D9E75',
-                  }}>
-                    {s.dueCount}
-                  </div>
-                  <div style={{ fontSize: '10px', color: 'rgba(15,15,26,0.3)' }}>due</div>
-                </div>
-
                 {/* Total cards */}
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: '15px', fontWeight: '600', color: '#0f0f1a' }}>
@@ -410,7 +385,7 @@ export default function Dashboard({ decks }: { decks: Deck[] }) {
 
                 {/* Ease gauge */}
                 <div>
-                  {s.seen > 0
+                  {s.practicedPct > 0
                     ? <EaseGauge ease={s.avgEase} />
                     : <span style={{ fontSize: '11px', color: 'rgba(15,15,26,0.25)' }}>Not started</span>
                   }
@@ -425,12 +400,8 @@ export default function Dashboard({ decks }: { decks: Deck[] }) {
       {total > 0 && (
         <div style={{
           marginTop: '14px',
-          background: mastPct >= 80
-            ? '#E1F5EE'
-            : dueTotal > 10
-              ? '#FAEEDA'
-              : '#EEEDFE',
-          border: `1px solid ${mastPct >= 80 ? '#9FE1CB' : dueTotal > 10 ? '#FAC775' : '#AFA9EC'}`,
+          background: mastPct >= 80 ? '#E1F5EE' : struggling > mastered ? '#FCEBEB' : '#EEEDFE',
+          border: `1px solid ${mastPct >= 80 ? '#9FE1CB' : struggling > mastered ? '#F7C1C1' : '#AFA9EC'}`,
           borderRadius: '14px',
           padding: '14px 20px',
           display: 'flex',
@@ -438,16 +409,16 @@ export default function Dashboard({ decks }: { decks: Deck[] }) {
           gap: '12px',
         }}>
           <div style={{ fontSize: '20px', flexShrink: 0 }}>
-            {mastPct >= 80 ? '🏆' : dueTotal > 10 ? '⚡' : '📈'}
+            {mastPct >= 80 ? '🏆' : struggling > mastered ? '💪' : '📈'}
           </div>
-          <div style={{ fontSize: '13px', color: mastPct >= 80 ? '#0F6E56' : dueTotal > 10 ? '#633806' : '#534AB7', fontWeight: '400', lineHeight: 1.5 }}>
+          <div style={{ fontSize: '13px', color: mastPct >= 80 ? '#0F6E56' : struggling > mastered ? '#A32D2D' : '#534AB7', fontWeight: '400', lineHeight: 1.5 }}>
             {mastPct >= 80
-              ? `Outstanding! You've mastered ${mastPct}% of all cards. Keep reviewing to maintain retention.`
-              : dueTotal > 10
-                ? `You have ${dueTotal} cards due for review. Tackle them now while they're still fresh.`
-                : seenPct < 30
-                  ? `You've seen ${seenPct}% of your cards. Start practicing to build your knowledge base.`
-                  : `You're making good progress — ${mastered} cards mastered, ${learning} in learning. Keep the streak going!`
+              ? `Outstanding — ${mastPct}% mastered across all cards. Keep practicing to maintain retention.`
+              : practicedPct < 20
+                ? `You've practiced ${practicedPct}% of your cards so far. Start a session to build momentum.`
+                : struggling > mastered
+                  ? `${struggling} cards still need work. Focus on your struggling cards to push your mastery up.`
+                  : `Good progress — ${mastered} mastered, ${learning} in learning. Keep the sessions going!`
             }
           </div>
         </div>
