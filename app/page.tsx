@@ -466,7 +466,7 @@ export default function Home() {
 
         .footer-tagline {
           font-size: 12px;
-          color: rgba(26,26,46,0.38);
+          color: rgba(26,26,46,0.62);
           letter-spacing: 0.01em;
         }
 
