@@ -84,6 +84,8 @@ export default function Home() {
   const [decks, setDecks] = useState<Deck[]>([]);
   const [activeDeck, setActiveDeck] = useState<Deck | null>(null);
   const [hoveredNav, setHoveredNav] = useState<string | null>(null);
+  // Ref so Practice can push live card state up at any time (including nav-away)
+  const practiceFinishRef = useRef<(() => void) | null>(null);
 
   const addDeck = (deck: Deck) => {
     setDecks(prev => [...prev, deck]);
@@ -92,18 +94,20 @@ export default function Home() {
 
   const updateDeck = (updatedDeck: Deck) => {
     setDecks(prev => prev.map(d => d.id === updatedDeck.id ? updatedDeck : d));
-    // Keep activeDeck in sync so re-practicing uses updated card data
     setActiveDeck(prev => prev?.id === updatedDeck.id ? updatedDeck : prev);
   };
 
   const startPractice = (deck: Deck) => {
-    // Always use the latest deck from state, not a stale reference
     setActiveDeck(deck);
     setScreen('practice');
   };
 
   const handleNavClick = (s: string) => {
     if (s === 'practice' && !activeDeck) return;
+    // If navigating away from practice, flush current card state first
+    if (screen === 'practice' && s !== 'practice' && practiceFinishRef.current) {
+      practiceFinishRef.current();
+    }
     setScreen(s);
   };
 
@@ -557,6 +561,7 @@ export default function Home() {
                 updateDeck(updatedDeck);
                 setScreen('decks');
               }}
+              onRegisterSave={(saveFn) => { practiceFinishRef.current = saveFn; }}
             />
           )}
           {screen === 'dashboard' && <Dashboard decks={decks} />}
