@@ -108,11 +108,3 @@ Flashcard Engine allows users to:
 https://flashcard-engine-two.vercel.app/
 
 ---
-
-## Installation
-
-```bash
-git clone https://github.com/your-username/flashcard-engine.git
-cd flashcard-engine
-npm install
-npm run dev
