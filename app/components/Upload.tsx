@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { DropZoneGrid } from '../page';
 
 interface Card {
   question: string;
@@ -87,6 +88,8 @@ export default function Upload({ onDeckCreated }: { onDeckCreated: (deck: Deck) 
         onDrop={(e) => { e.preventDefault(); setDragging(false); handleFile(e.dataTransfer.files[0]); }}
         onClick={() => !loading && document.getElementById('fileInput')?.click()}
         style={{
+          position: 'relative',        // ← needed for grid SVG to anchor to
+          overflow: 'hidden',           // ← clips the SVG to the rounded corners
           border: `2px dashed ${dragging ? '#6366f1' : 'rgba(99,102,241,0.2)'}`,
           borderRadius: '20px',
           padding: '4rem 2rem',
@@ -99,41 +102,48 @@ export default function Upload({ onDeckCreated }: { onDeckCreated: (deck: Deck) 
           boxShadow: '0 2px 16px rgba(0,0,0,0.06)',
         }}
       >
-        {loading ? (
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.25rem' }}>
-              <div className="spinner" style={{ width: '36px', height: '36px' }}></div>
+        {/* Matrix grid — sits behind all content */}
+        <DropZoneGrid />
+
+        {/* All drop-zone content must be above the grid (z-index: 2) */}
+        <div style={{ position: 'relative', zIndex: 2 }}>
+          {loading ? (
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.25rem' }}>
+                <div className="spinner" style={{ width: '36px', height: '36px' }}></div>
+              </div>
+              <p style={{ color: '#6366f1', fontWeight: '600', fontSize: '1rem', marginBottom: '0.5rem' }}>
+                Generating flashcards...
+              </p>
+              <p style={{ color: 'rgba(26,26,46,0.4)', fontSize: '0.875rem' }}>
+                This usually takes 20–30 seconds
+              </p>
             </div>
-            <p style={{ color: '#6366f1', fontWeight: '600', fontSize: '1rem', marginBottom: '0.5rem' }}>
-              Generating flashcards...
-            </p>
-            <p style={{ color: 'rgba(26,26,46,0.4)', fontSize: '0.875rem' }}>
-              This usually takes 20–30 seconds
-            </p>
-          </div>
-        ) : (
-          <div>
-            <div style={{
-              width: '56px', height: '56px',
-              background: 'rgba(99,102,241,0.1)',
-              borderRadius: '14px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              margin: '0 auto 1.25rem',
-            }}>
-              <svg width="24" height="24" fill="none" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="17 8 12 3 7 8"/>
-                <line x1="12" y1="3" x2="12" y2="15"/>
-              </svg>
+          ) : (
+            <div>
+              <div style={{
+                width: '56px', height: '56px',
+                background: 'rgba(99,102,241,0.1)',
+                borderRadius: '14px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                margin: '0 auto 1.25rem',
+              }}>
+                <svg width="24" height="24" fill="none" stroke="#6366f1" strokeWidth="2"
+                  strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="17 8 12 3 7 8"/>
+                  <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+              </div>
+              <p style={{ color: '#1a1a2e', fontWeight: '600', fontSize: '1rem', marginBottom: '0.4rem' }}>
+                Drop your PDF here
+              </p>
+              <p style={{ color: 'rgba(26,26,46,0.4)', fontSize: '0.875rem' }}>
+                or click to browse files
+              </p>
             </div>
-            <p style={{ color: '#1a1a2e', fontWeight: '600', fontSize: '1rem', marginBottom: '0.4rem' }}>
-              Drop your PDF here
-            </p>
-            <p style={{ color: 'rgba(26,26,46,0.4)', fontSize: '0.875rem' }}>
-              or click to browse files
-            </p>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       <input
