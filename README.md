@@ -5,7 +5,6 @@ A smart flashcard generation system that converts PDFs into high-quality, practi
 ## Live Demo
 https://lumoradot.vercel.app/
 
----
 
 ## Problem
 
