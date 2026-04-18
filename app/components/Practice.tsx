@@ -63,9 +63,11 @@ function spawnConfetti(container: HTMLElement) {
 export default function Practice({
   deck,
   onFinish,
+  onRegisterSave,
 }: {
   deck: Deck;
   onFinish: (updatedDeck: Deck) => void;
+  onRegisterSave?: (saveFn: () => void) => void;
 }) {
   const initCards = (src: Card[]) =>
     src.map(c => ({
@@ -125,17 +127,33 @@ export default function Practice({
     if (flipped) setShowKeyHint(false);
   }, [flipped]);
 
+  /* Register a save function with parent so nav-away always persists card state */
+  useEffect(() => {
+    if (!onRegisterSave) return;
+    onRegisterSave(() => {
+      onFinish({ ...deck, cards });
+    });
+  }, [cards, deck, onFinish, onRegisterSave]);
+
   const answer = (quality: number) => {
     if (quality === 5 && cardRef.current) spawnConfetti(cardRef.current);
     setAnimDir(quality >= 3 ? 'out-right' : 'out-left');
+
+    // Capture current values NOW (before the 280ms timeout) to avoid stale closure
+    const cardSnapshot = card;
+    const indexSnapshot = current;
+
     setTimeout(() => {
-      const updated = [...cards];
-      updated[current] = sm2(card, quality);
-      setCards(updated);
-      setSessionRatings(prev => ({ ...prev, [current]: quality }));
+      const updatedCard = sm2(cardSnapshot, quality);
+      setCards(prev => {
+        const next = [...prev];
+        next[indexSnapshot] = updatedCard;
+        return next;
+      });
+      setSessionRatings(prev => ({ ...prev, [indexSnapshot]: quality }));
       setSession(prev => ({
-        correct: quality >= 3 ? prev.correct + 1 : prev.correct,
-        incorrect: quality < 3 ? prev.incorrect + 1 : prev.incorrect,
+        correct:   quality >= 3 ? prev.correct   + 1 : prev.correct,
+        incorrect: quality < 3  ? prev.incorrect + 1 : prev.incorrect,
       }));
       setCurrent(p => p + 1);
       setFlipped(false);
