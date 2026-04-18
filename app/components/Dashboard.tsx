@@ -418,7 +418,7 @@ export default function Dashboard({ decks }: { decks: Deck[] }) {
                 ? `You've practiced ${practicedPct}% of your cards so far. Start a session to build momentum.`
                 : struggling > mastered
                   ? `${struggling} cards still need work. Focus on your struggling cards to push your mastery up.`
-                  : `Good progress — ${mastered} mastered, ${learning} in learning. Keep the sessions going!`
+                  : `Good progress — ${mastered} mastered, ${learning} in learning. Keep the sessions going! "Success is the sum of small efforts, repeated day in and day out"`
             }
           </div>
         </div>
