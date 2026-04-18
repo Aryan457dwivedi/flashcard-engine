@@ -148,7 +148,7 @@ export default function Upload({ onDeckCreated }: { onDeckCreated: (deck: Deck) 
           color: '#1a1a2e',
         }}>
           <TextGenerateEffect
-            words="Turn any PDF into"
+            words=".pdf to Smart Flashcards"
             duration={0.4}
             staggerDelay={0.10}
           />
@@ -162,7 +162,7 @@ export default function Upload({ onDeckCreated }: { onDeckCreated: (deck: Deck) 
             animation: 'hero-gradient-in 0.8s ease 0.8s forwards',
             opacity: 0,
           }}>
-            smart flashcards
+            For faster, better learning
           </span>
           <style>{`
             @keyframes hero-gradient-in {
