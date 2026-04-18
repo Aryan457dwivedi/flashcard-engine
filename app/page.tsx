@@ -590,7 +590,7 @@ export default function Home() {
           </nav>
         </div>
         <p className="footer-copy">
-          © {new Date().getFullYear()} © 2026 Lumora. Enhancing learning through spaced repetition.
+          © {new Date().getFullYear()} Lumora. Enhancing learning through spaced repetition.
         </p>
       </footer>
     </>
