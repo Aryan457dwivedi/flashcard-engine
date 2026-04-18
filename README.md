@@ -2,7 +2,8 @@
 
 A smart flashcard generation system that converts PDFs into high-quality, practice-ready flashcards using AI and applies spaced repetition to improve long-term retention.
 
-https://flashcard-engine-two.vercel.app/
+## Live Demo
+https://lumoradot.vercel.app/
 
 ---
 
@@ -105,4 +106,4 @@ Flashcard Engine allows users to:
 
 ## Live Demo
 
-https://flashcard-engine-two.vercel.app/
+https://lumoradot.vercel.app/
