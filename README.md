@@ -1,4 +1,4 @@
-# Flashcard Engine
+# Lumora.  -  Flashcard Engine
 
 A smart flashcard generation system that converts PDFs into high-quality, practice-ready flashcards using AI and applies spaced repetition to improve long-term retention.
 
