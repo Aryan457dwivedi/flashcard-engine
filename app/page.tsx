@@ -575,7 +575,7 @@ export default function Home() {
             <div className="footer-logo">Lumora.</div>
             <div className="footer-tagline">
               <TextGenerateEffect
-                words="Turn any PDF into smart flashcards"
+                words=".pdf to AI flashcards"
                 duration={0.4}
                 staggerDelay={0.10}
               />
@@ -590,7 +590,7 @@ export default function Home() {
           </nav>
         </div>
         <p className="footer-copy">
-          © {new Date().getFullYear()} Lumora. Built with Gemini AI &amp; spaced repetition.
+          © {new Date().getFullYear()} © 2026 Lumora. Enhancing learning through spaced repetition.
         </p>
       </footer>
     </>
