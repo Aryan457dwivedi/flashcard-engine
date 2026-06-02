@@ -86,6 +86,119 @@ function DropZoneGrid(): React.ReactElement {
   );
 }
 
+/* ── Comet card with 3D tilt + glare ─────────────────────────────────── */
+function CometFeatureCard({ title, desc }: { title: string; desc: string }): React.ReactElement {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const glareRef = useRef<HTMLDivElement>(null);
+  const rafRef = useRef<number | null>(null);
+
+  const state = useRef({
+    rX: 0, rY: 0, tX: 0, tY: 0, gX: 50, gY: 50, sc: 1,
+    tRX: 0, tRY: 0, tTX: 0, tTY: 0, tGX: 50, tGY: 50, tSc: 1,
+  });
+
+  const ROTATE = 14;
+  const TRANSLATE = 8;
+
+  function lerp(a: number, b: number, t: number) { return a + (b - a) * t; }
+
+  function tick() {
+    const s = state.current;
+    const sp = 0.18;
+    s.rX = lerp(s.rX, s.tRX, sp); s.rY = lerp(s.rY, s.tRY, sp);
+    s.tX = lerp(s.tX, s.tTX, sp); s.tY = lerp(s.tY, s.tTY, sp);
+    s.gX = lerp(s.gX, s.tGX, sp); s.gY = lerp(s.gY, s.tGY, sp);
+    s.sc = lerp(s.sc, s.tSc, 0.18);
+
+    if (cardRef.current) {
+      cardRef.current.style.transform =
+        `rotateX(${s.rX.toFixed(3)}deg) rotateY(${s.rY.toFixed(3)}deg) ` +
+        `translateX(${s.tX.toFixed(2)}px) translateY(${s.tY.toFixed(2)}px) ` +
+        `scale(${s.sc.toFixed(4)})`;
+    }
+    if (glareRef.current) {
+      glareRef.current.style.background =
+        `radial-gradient(circle at ${s.gX.toFixed(1)}% ${s.gY.toFixed(1)}%, ` +
+        `rgba(255,255,255,0.55) 10%, rgba(255,255,255,0.3) 40%, rgba(255,255,255,0) 80%)`;
+    }
+
+    const done =
+      Math.abs(s.rX - s.tRX) < 0.02 && Math.abs(s.rY - s.tRY) < 0.02 &&
+      Math.abs(s.tX - s.tTX) < 0.1  && Math.abs(s.tY - s.tTY) < 0.1 &&
+      Math.abs(s.sc - s.tSc) < 0.001;
+
+    rafRef.current = done ? null : requestAnimationFrame(tick);
+  }
+
+  function go() { if (!rafRef.current) rafRef.current = requestAnimationFrame(tick); }
+
+  function onMouseMove(e: React.MouseEvent<HTMLDivElement>) {
+    const el = cardRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const xp = (e.clientX - r.left) / r.width - 0.5;
+    const yp = (e.clientY - r.top) / r.height - 0.5;
+    const s = state.current;
+    s.tRX = yp * -ROTATE; s.tRY = xp * ROTATE;
+    s.tTX = xp * -TRANSLATE; s.tTY = yp * TRANSLATE;
+    s.tGX = (xp + 0.5) * 100; s.tGY = (yp + 0.5) * 100;
+    s.tSc = 1.04;
+    go();
+  }
+
+  function onMouseLeave() {
+    const s = state.current;
+    s.tRX = 0; s.tRY = 0; s.tTX = 0; s.tTY = 0;
+    s.tGX = 50; s.tGY = 50; s.tSc = 1;
+    go();
+  }
+
+  useEffect(() => {
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+  }, []);
+
+  return (
+    <div style={{ perspective: '800px' }}>
+      <div
+        ref={cardRef}
+        onMouseMove={onMouseMove}
+        onMouseLeave={onMouseLeave}
+        style={{
+          position: 'relative',
+          background: 'rgba(255,255,255,0.7)',
+          border: '1px solid rgba(99,102,241,0.12)',
+          borderRadius: '14px',
+          padding: '1.25rem',
+          boxShadow: '0 1px 6px rgba(0,0,0,0.05)',
+          transformStyle: 'preserve-3d',
+          willChange: 'transform',
+          cursor: 'default',
+        }}
+      >
+        {/* Glare overlay */}
+        <div
+          ref={glareRef}
+          style={{
+            pointerEvents: 'none',
+            position: 'absolute',
+            inset: 0,
+            zIndex: 10,
+            borderRadius: '14px',
+            mixBlendMode: 'overlay',
+            opacity: 0.7,
+          }}
+        />
+        <p style={{ fontWeight: '600', fontSize: '0.875rem', marginBottom: '0.5rem', color: '#1a1a2e', position: 'relative', zIndex: 2 }}>
+          {title}
+        </p>
+        <p style={{ color: 'rgba(26,26,46,0.45)', fontSize: '0.8rem', lineHeight: '1.5', position: 'relative', zIndex: 2 }}>
+          {desc}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 interface Card {
   question: string;
   answer: string;
@@ -366,7 +479,7 @@ export default function Upload({ onDeckCreated }: { onDeckCreated: (deck: Deck) 
         </p>
       )}
 
-      {/* Feature Cards */}
+      {/* Feature Cards — comet 3D tilt hover */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(3, 1fr)',
@@ -379,20 +492,7 @@ export default function Upload({ onDeckCreated }: { onDeckCreated: (deck: Deck) 
           ['Spaced Repetition', 'The SM-2 algorithm surfaces hard cards more often so you learn faster.'],
           ['Track Mastery', 'See exactly what you know, what needs work, and what is coming up for review.'],
         ].map(([title, desc]) => (
-          <div key={title} style={{
-            background: 'rgba(255,255,255,0.7)',
-            border: '1px solid rgba(99,102,241,0.12)',
-            borderRadius: '14px',
-            padding: '1.25rem',
-            boxShadow: '0 1px 6px rgba(0,0,0,0.05)',
-          }}>
-            <p style={{ fontWeight: '600', fontSize: '0.875rem', marginBottom: '0.5rem', color: '#1a1a2e' }}>
-              {title}
-            </p>
-            <p style={{ color: 'rgba(26,26,46,0.45)', fontSize: '0.8rem', lineHeight: '1.5' }}>
-              {desc}
-            </p>
-          </div>
+          <CometFeatureCard key={title} title={title!} desc={desc!} />
         ))}
       </div>
 
