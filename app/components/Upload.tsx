@@ -165,8 +165,8 @@ function CometFeatureCard({ title, desc }: { title: string; desc: string }): Rea
         onMouseLeave={onMouseLeave}
         style={{
           position: 'relative',
-          background: 'rgba(255,255,255,0.7)',
-          border: '1px solid rgba(99,102,241,0.12)',
+          background: 'rgba(235,234,255,0.75)',
+          border: '1px solid rgba(99,102,241,0.22)',
           borderRadius: '14px',
           padding: '1.25rem',
           boxShadow: '0 1px 6px rgba(0,0,0,0.05)',
