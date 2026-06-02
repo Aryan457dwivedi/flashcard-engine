@@ -237,9 +237,9 @@ export default function Home() {
           grid-template-columns: 1fr auto 1fr;
           align-items: center;
           padding: 0 36px;
-          background: rgba(225,222,215,0.55);
-          backdrop-filter: blur(48px) saturate(200%) brightness(1.02);
-          -webkit-backdrop-filter: blur(48px) saturate(200%) brightness(1.02);
+          background: rgba(215,212,205,0.50);
+backdrop-filter: blur(24px);
+-webkit-backdrop-filter: blur(24px);
           border-bottom: 1px solid rgba(91,91,214,0.08);
           box-shadow:
             0 1px 0 rgba(255,255,255,0.9),
