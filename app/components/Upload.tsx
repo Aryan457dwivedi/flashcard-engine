@@ -86,7 +86,7 @@ function DropZoneGrid(): React.ReactElement {
   );
 }
 
-/* ── Comet card with 3D tilt + glare ─────────────────────────────────── */
+/* ── Liquid Glass iOS 26 card with comet tilt + glare ────────────────── */
 function CometFeatureCard({ title, desc }: { title: string; desc: string }): React.ReactElement {
   const cardRef = useRef<HTMLDivElement>(null);
   const glareRef = useRef<HTMLDivElement>(null);
@@ -97,8 +97,8 @@ function CometFeatureCard({ title, desc }: { title: string; desc: string }): Rea
     tRX: 0, tRY: 0, tTX: 0, tTY: 0, tGX: 50, tGY: 50, tSc: 1,
   });
 
-  const ROTATE = 14;
-  const TRANSLATE = 8;
+  const ROTATE = 17.5;
+  const TRANSLATE = 10;
 
   function lerp(a: number, b: number, t: number) { return a + (b - a) * t; }
 
@@ -115,11 +115,23 @@ function CometFeatureCard({ title, desc }: { title: string; desc: string }): Rea
         `rotateX(${s.rX.toFixed(3)}deg) rotateY(${s.rY.toFixed(3)}deg) ` +
         `translateX(${s.tX.toFixed(2)}px) translateY(${s.tY.toFixed(2)}px) ` +
         `scale(${s.sc.toFixed(4)})`;
+
+      /* Dynamically shift the box-shadow to feel physically lit */
+      const shadowX = (s.rY * 0.6).toFixed(1);
+      const shadowY = (s.rX * -0.6).toFixed(1);
+      cardRef.current.style.boxShadow = `
+        0 1px 0 0 rgba(255,255,255,0.75) inset,
+        0 -1px 0 0 rgba(0,0,0,0.07) inset,
+        ${shadowX}px ${shadowY}px 40px rgba(99,102,241,0.13),
+        0 8px 32px rgba(0,0,0,0.10),
+        0 2px 8px rgba(0,0,0,0.07)
+      `;
     }
+
     if (glareRef.current) {
       glareRef.current.style.background =
         `radial-gradient(circle at ${s.gX.toFixed(1)}% ${s.gY.toFixed(1)}%, ` +
-        `rgba(255,255,255,0.55) 10%, rgba(255,255,255,0.3) 40%, rgba(255,255,255,0) 80%)`;
+        `rgba(255,255,255,0.65) 0%, rgba(255,255,255,0.18) 35%, rgba(255,255,255,0) 70%)`;
     }
 
     const done =
@@ -142,7 +154,7 @@ function CometFeatureCard({ title, desc }: { title: string; desc: string }): Rea
     s.tRX = yp * -ROTATE; s.tRY = xp * ROTATE;
     s.tTX = xp * -TRANSLATE; s.tTY = yp * TRANSLATE;
     s.tGX = (xp + 0.5) * 100; s.tGY = (yp + 0.5) * 100;
-    s.tSc = 1.04;
+    s.tSc = 1.05;
     go();
   }
 
@@ -158,40 +170,111 @@ function CometFeatureCard({ title, desc }: { title: string; desc: string }): Rea
   }, []);
 
   return (
-    <div style={{ perspective: '800px' }}>
+    <div style={{ perspective: '900px' }}>
       <div
         ref={cardRef}
         onMouseMove={onMouseMove}
         onMouseLeave={onMouseLeave}
         style={{
           position: 'relative',
-          background: 'rgba(235,234,255,0.75)',
-          border: '1px solid rgba(99,102,241,0.22)',
-          borderRadius: '14px',
+          borderRadius: '20px',
           padding: '1.25rem',
-          boxShadow: '0 1px 6px rgba(0,0,0,0.05)',
           transformStyle: 'preserve-3d',
           willChange: 'transform',
           cursor: 'default',
+          background: 'rgba(255,255,255,0.18)',
+          backdropFilter: 'blur(28px) saturate(1.9) brightness(1.05)',
+          WebkitBackdropFilter: 'blur(28px) saturate(1.9) brightness(1.05)',
+          border: '1px solid rgba(255,255,255,0.48)',
+          boxShadow: `
+            0 1px 0 0 rgba(255,255,255,0.75) inset,
+            0 -1px 0 0 rgba(0,0,0,0.07) inset,
+            0 8px 32px rgba(0,0,0,0.10),
+            0 2px 8px rgba(0,0,0,0.07)
+          `,
         }}
       >
-        {/* Glare overlay */}
+        {/* Top specular rim — the liquid highlight */}
+        <div style={{
+          pointerEvents: 'none',
+          position: 'absolute',
+          top: 0,
+          left: '8%',
+          right: '8%',
+          height: '1px',
+          background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.95) 25%, rgba(255,255,255,0.95) 75%, transparent)',
+          zIndex: 12,
+        }} />
+
+        {/* Bottom shadow rim */}
+        <div style={{
+          pointerEvents: 'none',
+          position: 'absolute',
+          bottom: 0,
+          left: '12%',
+          right: '12%',
+          height: '1px',
+          background: 'linear-gradient(90deg, transparent, rgba(0,0,0,0.08) 30%, rgba(0,0,0,0.08) 70%, transparent)',
+          zIndex: 12,
+        }} />
+
+        {/* Left edge specular */}
+        <div style={{
+          pointerEvents: 'none',
+          position: 'absolute',
+          top: '8%',
+          bottom: '8%',
+          left: 0,
+          width: '1px',
+          background: 'linear-gradient(180deg, transparent, rgba(255,255,255,0.6) 30%, rgba(255,255,255,0.6) 70%, transparent)',
+          zIndex: 12,
+        }} />
+
+        {/* Moving glare — comet effect */}
         <div
           ref={glareRef}
           style={{
             pointerEvents: 'none',
             position: 'absolute',
             inset: 0,
-            zIndex: 10,
-            borderRadius: '14px',
+            zIndex: 11,
+            borderRadius: '20px',
             mixBlendMode: 'overlay',
-            opacity: 0.7,
+            opacity: 0.85,
           }}
         />
-        <p style={{ fontWeight: '600', fontSize: '0.875rem', marginBottom: '0.5rem', color: '#1a1a2e', position: 'relative', zIndex: 2 }}>
+
+        {/* Noise texture — frosted micro-texture */}
+        <div style={{
+          pointerEvents: 'none',
+          position: 'absolute',
+          inset: 0,
+          borderRadius: '20px',
+          zIndex: 10,
+          opacity: 0.025,
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+          backgroundSize: '120px 120px',
+        }} />
+
+        {/* Content */}
+        <p style={{
+          fontWeight: '650',
+          fontSize: '0.875rem',
+          marginBottom: '0.5rem',
+          color: 'rgba(15,15,35,0.88)',
+          position: 'relative',
+          zIndex: 13,
+          letterSpacing: '-0.01em',
+        }}>
           {title}
         </p>
-        <p style={{ color: 'rgba(26,26,46,0.45)', fontSize: '0.8rem', lineHeight: '1.5', position: 'relative', zIndex: 2 }}>
+        <p style={{
+          color: 'rgba(15,15,35,0.48)',
+          fontSize: '0.8rem',
+          lineHeight: '1.55',
+          position: 'relative',
+          zIndex: 13,
+        }}>
           {desc}
         </p>
       </div>
@@ -479,7 +562,7 @@ export default function Upload({ onDeckCreated }: { onDeckCreated: (deck: Deck) 
         </p>
       )}
 
-      {/* Feature Cards — comet 3D tilt hover */}
+      {/* Feature Cards — liquid glass iOS 26 + comet tilt */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(3, 1fr)',
