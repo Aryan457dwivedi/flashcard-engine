@@ -324,9 +324,6 @@ export default function Practice({
         {/* Progress bar */}
         <div className="progress-track">
           <div className="progress-fill" style={{ width: `${pct}%` }}/>
-          {pct > 0 && pct < 100 && (
-            <div className="progress-head" style={{ left: `${pct}%` }}/>
-          )}
         </div>
 
         {/* Streak */}
@@ -364,9 +361,6 @@ export default function Practice({
                   {/* Label: no dot, black text */}
                   <div className="card-side-label">Answer</div>
                   <p className="card-text answer-text">{card.answer}</p>
-                  <div className="card-bottom-hint">
-                    <span className="kbd-hint">Rate: <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></span>
-                  </div>
                 </div>
               )}
             </div>
@@ -384,10 +378,9 @@ export default function Practice({
           ].map(({ q, label, sub, cls, icon }) => (
             <button key={q} className={`rating-btn ${cls}`}
               onClick={e => { e.stopPropagation(); answer(q); }}>
-              <span className="r-icon-wrap"><span className="r-icon">{icon}</span></span>
+              <span className="r-icon">{icon}</span>
               <span className="r-label">{label}</span>
               <span className="r-sub">{sub}</span>
-              <span className="r-key">{q}</span>
             </button>
           ))}
         </div>
@@ -427,10 +420,6 @@ const STYLES = `
 @keyframes streak-flash {
   0%,100% { background: rgba(239,159,39,0.12); }
   40%     { background: rgba(239,159,39,0.30); transform: scale(1.03); }
-}
-@keyframes head-pulse {
-  0%,100% { box-shadow: 0 0 0 3px rgba(127,119,221,0.22); }
-  50%     { box-shadow: 0 0 0 6px rgba(127,119,221,0.08); }
 }
 @keyframes face-appear {
   from { opacity:0; transform: translateY(8px); }
@@ -522,15 +511,6 @@ const STYLES = `
   border-radius: 999px;
   transition: width 0.55s cubic-bezier(0.4,0,0.2,1);
 }
-.progress-head {
-  position: absolute; top: 50%;
-  transform: translate(-50%, -50%);
-  width: 10px; height: 10px;
-  background: #AFA9EC; border-radius: 50%;
-  border: 2px solid white;
-  animation: head-pulse 1.8s ease-in-out infinite;
-}
-
 /* ── Streak ── */
 .streak-bar {
   display: inline-flex; align-items: center;
