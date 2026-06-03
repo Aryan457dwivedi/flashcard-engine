@@ -680,7 +680,8 @@ kbd {
 
 /* ── Rating buttons ── */
 .rating-row {
-  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;
+  max-width: 420px; margin: 0 auto;
   opacity: 0; transform: translateY(14px);
   pointer-events: none;
   transition: opacity 0.26s ease, transform 0.26s ease;
@@ -689,8 +690,8 @@ kbd {
 
 .rating-btn {
   position: relative; display: flex; flex-direction: column;
-  align-items: center; gap: 5px;
-  padding: 18px 10px 16px;
+  align-items: center; gap: 4px;
+  padding: 14px 8px 12px;
   border-radius: var(--radius-btn); border: 1px solid;
   cursor: pointer; font-family: 'DM Sans', sans-serif;
   backdrop-filter: blur(20px) saturate(1.5);
@@ -743,7 +744,7 @@ kbd {
 
 /* Icon circles — subtle tinted but not saturated */
 .r-icon-wrap {
-  width: 38px; height: 38px; border-radius: 50%;
+  width: 32px; height: 32px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center; margin-bottom: 2px;
 }
 .btn-miss  .r-icon-wrap { background: rgba(226,75,74,0.12); }
