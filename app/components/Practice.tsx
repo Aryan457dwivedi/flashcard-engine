@@ -311,7 +311,7 @@ export default function Practice({
             </svg>
             Exit
           </button>
-          <div className="deck-tag">
+          <div className="deck-name">
             {deck.name}
           </div>
           <div className="counter-badge">
@@ -417,10 +417,6 @@ const STYLES = `
   from { opacity:1; transform: translateX(0) rotate(0deg); }
   to   { opacity:0; transform: translateX(-110px) rotate(-6deg); }
 }
-@keyframes streak-flash {
-  0%,100% { background: rgba(239,159,39,0.12); }
-  40%     { background: rgba(239,159,39,0.30); transform: scale(1.03); }
-}
 @keyframes face-appear {
   from { opacity:0; transform: translateY(8px); }
   to   { opacity:1; transform: translateY(0); }
@@ -481,17 +477,11 @@ const STYLES = `
   transform: translateY(-1px);
 }
 
-.deck-tag {
-  background: rgba(255,255,255,0.50);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border: 1px solid rgba(255,255,255,0.70);
-  border-radius: 10px; padding: 6px 16px;
-  font-size: 12.5px; font-weight: 600;
-  color: var(--brand-dark); letter-spacing: 0.01em;
+.deck-name {
+  font-size: 13px; font-weight: 600;
+  color: #0f0f1a; letter-spacing: 0.01em;
   max-width: 200px; overflow: hidden;
   text-overflow: ellipsis; white-space: nowrap;
-  box-shadow: 0 2px 10px rgba(100,90,200,0.08);
 }
 
 .counter-badge { display: flex; align-items: baseline; gap: 2px; font-family: 'Fraunces', Georgia, serif; }
@@ -514,16 +504,16 @@ const STYLES = `
 /* ── Streak ── */
 .streak-bar {
   display: inline-flex; align-items: center;
-  background: rgba(255,255,255,0.50);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border: 1px solid rgba(255,255,255,0.70);
-  border-radius: 10px; padding: 6px 16px;
   font-size: 12.5px; font-weight: 600;
-  color: var(--brand-dark); margin-bottom: 22px;
-  box-shadow: 0 2px 10px rgba(100,90,200,0.08);
+  color: #0f0f1a; margin-bottom: 22px;
+  opacity: 0;
+  transform: translateY(-6px);
+  animation: streak-in 0.35s cubic-bezier(0.22,1,0.36,1) forwards;
 }
-.streak-bar.flash { animation: streak-flash 0.55s ease; }
+@keyframes streak-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
 /* ── Stack wrapper (no ghost cards) ── */
 .stack-wrap {
@@ -572,18 +562,18 @@ const STYLES = `
   cursor: pointer; overflow: hidden;
   background: linear-gradient(
     135deg,
-    rgba(255,255,255,0.72) 0%,
-    rgba(255,255,255,0.42) 40%,
-    rgba(255,255,255,0.52) 100%
+    rgba(255,255,255,0.88) 0%,
+    rgba(245,244,255,0.78) 40%,
+    rgba(250,250,255,0.84) 100%
   );
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid rgba(255,255,255,0.72);
+  border: 1px solid rgba(255,255,255,0.80);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.90),
-    inset 0 -1px 0 rgba(255,255,255,0.28),
-    0 2px 12px rgba(127,119,221,0.06),
-    0 1px 4px rgba(0,0,0,0.03);
+    inset 0 1px 0 rgba(255,255,255,0.95),
+    inset 0 -1px 0 rgba(200,196,240,0.20),
+    0 4px 20px rgba(80,70,180,0.13),
+    0 1px 4px rgba(0,0,0,0.06);
   outline: none;
   -webkit-tap-highlight-color: transparent;
   transform-style: preserve-3d;
@@ -591,16 +581,16 @@ const STYLES = `
 .card-shell.is-flipped {
   background: linear-gradient(
     135deg,
-    rgba(255,255,255,0.72) 0%,
-    rgba(255,255,255,0.42) 40%,
-    rgba(255,255,255,0.52) 100%
+    rgba(255,255,255,0.88) 0%,
+    rgba(245,244,255,0.78) 40%,
+    rgba(250,250,255,0.84) 100%
   );
-  border-color: rgba(255,255,255,0.72);
+  border-color: rgba(255,255,255,0.80);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.90),
-    inset 0 -1px 0 rgba(255,255,255,0.28),
-    0 2px 12px rgba(127,119,221,0.06),
-    0 1px 4px rgba(0,0,0,0.03);
+    inset 0 1px 0 rgba(255,255,255,0.95),
+    inset 0 -1px 0 rgba(200,196,240,0.20),
+    0 4px 20px rgba(80,70,180,0.13),
+    0 1px 4px rgba(0,0,0,0.06);
 }
 .card-shell:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
 .card-shell.anim-in        { animation: card-in        0.36s cubic-bezier(0.22,1,0.36,1) forwards; }
@@ -711,15 +701,15 @@ kbd {
 .rating-btn:active { transform: translateY(-2px) scale(0.97); }
 .rating-btn:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 
-/* All three buttons — same neutral glass base */
+/* All three buttons — same neutral glass base, darker fill */
 .btn-miss, .btn-shaky, .btn-got {
-  background: rgba(255,255,255,0.50);
-  border-color: rgba(255,255,255,0.70);
-  box-shadow: 0 2px 10px rgba(100,90,200,0.08), inset 0 1px 0 rgba(255,255,255,0.80);
+  background: rgba(255,255,255,0.82);
+  border-color: rgba(220,218,240,0.80);
+  box-shadow: 0 2px 10px rgba(100,90,200,0.10), inset 0 1px 0 rgba(255,255,255,0.95);
 }
 .btn-miss:hover, .btn-shaky:hover, .btn-got:hover {
-  background: rgba(255,255,255,0.62);
-  box-shadow: 0 6px 24px rgba(100,90,200,0.12), inset 0 1px 0 rgba(255,255,255,0.90);
+  background: rgba(255,255,255,0.92);
+  box-shadow: 0 6px 24px rgba(100,90,200,0.14), inset 0 1px 0 rgba(255,255,255,1);
 }
 
 /* Icon circles — subtle tinted but not saturated */
