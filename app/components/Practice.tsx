@@ -328,7 +328,7 @@ export default function Practice({
 
         {/* Streak */}
         {session.correct > 1 && (
-          <div className={`streak-bar${streakFlash ? ' flash' : ''}`}>
+          <div key={session.correct} className={`streak-bar${streakFlash ? ' flash' : ''}`}>
             {session.correct} correct in a row!
           </div>
         )}
@@ -369,20 +369,22 @@ export default function Practice({
           </div>
         </div>
 
-        {/* Rating buttons */}
+        {/* Rating buttons — single pill row */}
         <div className={`rating-row${flipped ? ' visible' : ''}`}>
-          {[
-            { q: 1, label: 'Missed',  sub: 'Show again soon', cls: 'btn-miss',  icon: '✕' },
-            { q: 3, label: 'Shaky',   sub: 'Needed effort',   cls: 'btn-shaky', icon: '~' },
-            { q: 5, label: 'Got it!', sub: 'Easy recall',     cls: 'btn-got',   icon: '✓' },
-          ].map(({ q, label, sub, cls, icon }) => (
-            <button key={q} className={`rating-btn ${cls}`}
-              onClick={e => { e.stopPropagation(); answer(q); }}>
-              <span className="r-icon">{icon}</span>
-              <span className="r-label">{label}</span>
-              <span className="r-sub">{sub}</span>
-            </button>
-          ))}
+          <div className="rating-group">
+            {[
+              { q: 1, label: 'Missed',  icon: '✕', cls: 'rg-miss'  },
+              { q: 3, label: 'Shaky',   icon: '~', cls: 'rg-shaky' },
+              { q: 5, label: 'Got it!', icon: '✓', cls: 'rg-got'   },
+            ].map(({ q, label, icon, cls }, i, arr) => (
+              <button key={q} className={`rg-btn ${cls}`}
+                onClick={e => { e.stopPropagation(); answer(q); }}>
+                <span className="rg-icon">{icon}</span>
+                <span className="rg-label">{label}</span>
+                {i < arr.length - 1 && <span className="rg-divider"/>}
+              </button>
+            ))}
+          </div>
         </div>
 
         {!flipped && showKeyHint && (
@@ -506,13 +508,13 @@ const STYLES = `
   display: inline-flex; align-items: center;
   font-size: 12.5px; font-weight: 600;
   color: #0f0f1a; margin-bottom: 22px;
-  opacity: 0;
-  transform: translateY(-6px);
   animation: streak-in 0.35s cubic-bezier(0.22,1,0.36,1) forwards;
 }
 @keyframes streak-in {
-  from { opacity: 0; transform: translateY(-6px); }
-  to   { opacity: 1; transform: translateY(0); }
+  0%   { opacity: 0; transform: translateY(-6px); color: #0f0f1a; }
+  1%   { opacity: 1; transform: translateY(0);    color: #D97706; }
+  40%  { color: #D97706; }
+  100% { opacity: 1; transform: translateY(0);    color: #0f0f1a; }
 }
 
 /* ── Stack wrapper (no ghost cards) ── */
@@ -658,80 +660,63 @@ kbd {
 }
 .rating-row.visible { opacity: 1; transform: translateY(0); pointer-events: all; }
 
-.rating-btn {
-  position: relative; display: flex; flex-direction: column;
-  align-items: center; gap: 4px;
-  padding: 14px 8px 12px;
-  border-radius: var(--radius-btn); border: 1px solid;
-  cursor: pointer; font-family: 'DM Sans', sans-serif;
+/* ── Rating group — single inline bar ── */
+.rating-row {
+  display: flex; justify-content: center;
+  opacity: 0; transform: translateY(14px);
+  pointer-events: none;
+  transition: opacity 0.26s ease, transform 0.26s ease;
+}
+.rating-row.visible { opacity: 1; transform: translateY(0); pointer-events: all; }
+
+.rating-group {
+  display: inline-flex; align-items: stretch;
+  background: rgba(255,255,255,0.82);
+  border: 1px solid rgba(220,218,240,0.80);
+  border-radius: 20px;
+  box-shadow: 0 2px 10px rgba(100,90,200,0.10), inset 0 1px 0 rgba(255,255,255,0.95);
   backdrop-filter: blur(20px) saturate(1.5);
   -webkit-backdrop-filter: blur(20px) saturate(1.5);
-  transition: transform 0.2s cubic-bezier(0.22,1,0.36,1), box-shadow 0.2s, background 0.15s;
-  -webkit-tap-highlight-color: transparent; overflow: hidden;
+  overflow: hidden;
+  position: relative;
 }
-/* Subtle top specular highlight on all buttons */
-.rating-btn::before {
-  content: '';
-  position: absolute; inset: 0;
-  background: linear-gradient(to bottom, rgba(255,255,255,0.50) 0%, rgba(255,255,255,0) 55%);
-  pointer-events: none; border-radius: inherit; z-index: 0;
-}
-/* Shine sweep on hover — diagonal highlight travels left→right */
-.rating-btn::after {
+/* shine sweep on hover of the whole group */
+.rating-group::after {
   content: '';
   position: absolute;
   top: -60%; left: -75%;
   width: 50%; height: 220%;
-  background: linear-gradient(
-    105deg,
-    rgba(255,255,255,0) 0%,
-    rgba(255,255,255,0.52) 50%,
-    rgba(255,255,255,0) 100%
-  );
+  background: linear-gradient(105deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.52) 50%, rgba(255,255,255,0) 100%);
   transform: skewX(-18deg) translateX(0);
-  opacity: 0;
-  pointer-events: none; border-radius: 0;
+  opacity: 0; pointer-events: none;
   transition: opacity 0.15s, transform 0.45s cubic-bezier(0.22,1,0.36,1);
 }
-.rating-btn:hover::after {
-  opacity: 1;
-  transform: skewX(-18deg) translateX(380%);
-}
-.rating-btn:hover { transform: translateY(-5px); }
-.rating-btn:active { transform: translateY(-2px) scale(0.97); }
-.rating-btn:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.rating-group:hover::after { opacity: 1; transform: skewX(-18deg) translateX(460%); }
 
-/* All three buttons — same neutral glass base, darker fill */
-.btn-miss, .btn-shaky, .btn-got {
-  background: rgba(255,255,255,0.82);
-  border-color: rgba(220,218,240,0.80);
-  box-shadow: 0 2px 10px rgba(100,90,200,0.10), inset 0 1px 0 rgba(255,255,255,0.95);
+.rg-btn {
+  position: relative; display: flex; align-items: center; gap: 7px;
+  padding: 13px 22px;
+  background: transparent; border: none;
+  cursor: pointer; font-family: 'DM Sans', sans-serif;
+  transition: background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  z-index: 1;
 }
-.btn-miss:hover, .btn-shaky:hover, .btn-got:hover {
-  background: rgba(255,255,255,0.92);
-  box-shadow: 0 6px 24px rgba(100,90,200,0.14), inset 0 1px 0 rgba(255,255,255,1);
-}
+.rg-btn:hover { background: rgba(127,119,221,0.07); }
+.rg-btn:active { background: rgba(127,119,221,0.13); }
 
-/* Icon circles — subtle tinted but not saturated */
-.r-icon-wrap {
-  width: 32px; height: 32px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center; margin-bottom: 2px;
+.rg-icon { font-size: 14px; font-family: monospace; font-weight: 700; line-height: 1; }
+.rg-miss  .rg-icon { color: #A32D2D; }
+.rg-shaky .rg-icon { color: #854F0B; }
+.rg-got   .rg-icon { color: #0F6E56; }
+
+.rg-label { font-size: 13.5px; font-weight: 600; color: var(--text-primary); letter-spacing: -0.01em; }
+
+.rg-divider {
+  position: absolute; right: 0; top: 20%; height: 60%;
+  width: 1px; background: rgba(180,176,220,0.40);
+  pointer-events: none;
 }
-.btn-miss  .r-icon-wrap { background: rgba(226,75,74,0.12); }
-.btn-shaky .r-icon-wrap { background: rgba(186,117,23,0.12); }
-.btn-got   .r-icon-wrap { background: rgba(29,158,117,0.12); }
-.r-icon { font-size: 17px; font-family: monospace; line-height: 1; font-weight: 700; }
-.btn-miss  .r-icon { color: #A32D2D; }
-.btn-shaky .r-icon { color: #854F0B; }
-.btn-got   .r-icon { color: #0F6E56; }
-.r-label { font-size: 14.5px; font-weight: 600; letter-spacing: -0.01em; color: var(--text-primary); }
-.r-sub { font-size: 11.5px; font-weight: 400; color: rgba(15,15,26,0.38); }
-.r-key {
-  position: absolute; top: 8px; right: 10px;
-  font-size: 10px; font-weight: 600; opacity: 0.28;
-  font-family: 'DM Sans', sans-serif; color: var(--text-primary);
-}
-@media (hover: none) { .r-key { display: none; } }
 
 .bottom-kb-hint {
   text-align: center; font-size: 12.5px; color: var(--text-secondary);
