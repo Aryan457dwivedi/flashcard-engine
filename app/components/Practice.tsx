@@ -311,8 +311,7 @@ export default function Practice({
             </svg>
             Exit
           </button>
-          <div className="deck-pill">
-          
+          <div className="deck-tag">
             {deck.name}
           </div>
           <div className="counter-badge">
@@ -333,9 +332,6 @@ export default function Practice({
         {/* Streak */}
         {session.correct > 1 && (
           <div className={`streak-bar${streakFlash ? ' flash' : ''}`}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="#EF9F27">
-              <path d="M13 2L4.09 12.97A1 1 0 005 14.5h5.5L10 22l9.91-10.97A1 1 0 0019 9.5h-5.5z"/>
-            </svg>
             {session.correct} correct in a row!
           </div>
         )}
@@ -496,22 +492,17 @@ const STYLES = `
   transform: translateY(-1px);
 }
 
-.deck-pill {
-  display: flex; align-items: center; gap: 8px;
+.deck-tag {
   background: rgba(255,255,255,0.50);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
   border: 1px solid rgba(255,255,255,0.70);
-  border-radius: 999px; padding: 7px 18px;
+  border-radius: 10px; padding: 6px 16px;
   font-size: 12.5px; font-weight: 600;
   color: var(--brand-dark); letter-spacing: 0.01em;
   max-width: 200px; overflow: hidden;
   text-overflow: ellipsis; white-space: nowrap;
   box-shadow: 0 2px 10px rgba(100,90,200,0.08);
-}
-.deck-pill-dot {
-  width: 7px; height: 7px; border-radius: 50%;
-  background: var(--brand); flex-shrink: 0;
 }
 
 .counter-badge { display: flex; align-items: baseline; gap: 2px; font-family: 'Fraunces', Georgia, serif; }
@@ -626,8 +617,8 @@ const STYLES = `
   border-color: rgba(255,255,255,0.80);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.95),
-    inset 0 -1px 0 rgba(29,158,117,0.15),
-    0 4px 20px rgba(29,158,117,0.08),
+    inset 0 -1px 0 rgba(255,255,255,0.20),
+    0 2px 12px rgba(127,119,221,0.06),
     0 1px 4px rgba(0,0,0,0.03);
 }
 .card-shell:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
