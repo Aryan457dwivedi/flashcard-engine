@@ -312,7 +312,7 @@ export default function Practice({
             Exit
           </button>
           <div className="deck-pill">
-            <span className="deck-pill-dot"/>
+          
             {deck.name}
           </div>
           <div className="counter-badge">
