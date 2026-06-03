@@ -59,50 +59,61 @@ function spawnConfetti(container: HTMLElement) {
   }
 }
 
-/* ── Card stack ghost layers ─────────────────────────────────────────── */
-function CardStack({ flipped, cardCount, currentIndex }: {
-  flipped: boolean;
-  cardCount: number;
-  currentIndex: number;
-}) {
-  const remaining = cardCount - currentIndex - 1;
-  const ghost1Visible = remaining >= 1;
-  const ghost2Visible = remaining >= 2;
+function attachCometTilt(
+  wrap: HTMLElement,
+  glare: HTMLElement,
+  ROTATE = 15,
+  TRANSLATE = 16
+) {
+  let rX=0,rY=0,tX=0,tY=0,gX=50,gY=50,sc=1;
+  let tRX=0,tRY=0,tTX=0,tTY=0,tGX=50,tGY=50,tSc=1;
+  let raf: number | null = null;
+  const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
-  return (
-    <>
-      {/* Ghost card 2 — furthest back */}
-      {ghost2Visible && (
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          borderRadius: '24px',
-          background: 'rgba(255,255,255,0.55)',
-          border: '1px solid rgba(127,119,221,0.10)',
-          transform: 'translateY(18px) scale(0.92)',
-          zIndex: 0,
-          transition: 'transform 0.4s cubic-bezier(0.22,1,0.36,1)',
-          boxShadow: '0 8px 24px rgba(127,119,221,0.06)',
-          pointerEvents: 'none',
-        }} />
-      )}
-      {/* Ghost card 1 — middle */}
-      {ghost1Visible && (
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          borderRadius: '24px',
-          background: 'rgba(255,255,255,0.72)',
-          border: '1px solid rgba(127,119,221,0.12)',
-          transform: 'translateY(9px) scale(0.96)',
-          zIndex: 1,
-          transition: 'transform 0.4s cubic-bezier(0.22,1,0.36,1)',
-          boxShadow: '0 8px 24px rgba(127,119,221,0.08)',
-          pointerEvents: 'none',
-        }} />
-      )}
-    </>
-  );
+  function tick() {
+    const s = 0.18;
+    rX=lerp(rX,tRX,s); rY=lerp(rY,tRY,s);
+    tX=lerp(tX,tTX,s); tY=lerp(tY,tTY,s);
+    gX=lerp(gX,tGX,s); gY=lerp(gY,tGY,s);
+    sc=lerp(sc,tSc,0.18);
+    wrap.style.transform =
+      `rotateX(${rX.toFixed(3)}deg) rotateY(${rY.toFixed(3)}deg) ` +
+      `translateX(${tX.toFixed(2)}px) translateY(${tY.toFixed(2)}px) ` +
+      `scale(${sc.toFixed(4)})`;
+    glare.style.background =
+      `radial-gradient(circle at ${gX.toFixed(1)}% ${gY.toFixed(1)}%, ` +
+      `rgba(255,255,255,0.88) 5%, rgba(255,255,255,0.60) 18%, rgba(255,255,255,0) 75%)`;
+    const done =
+      Math.abs(rX-tRX)<0.02 && Math.abs(rY-tRY)<0.02 &&
+      Math.abs(tX-tTX)<0.1  && Math.abs(tY-tTY)<0.1  &&
+      Math.abs(sc-tSc)<0.001;
+    raf = done ? null : requestAnimationFrame(tick);
+  }
+
+  function go() { if (!raf) raf = requestAnimationFrame(tick); }
+
+  function onMove(e: MouseEvent) {
+    const r = wrap.getBoundingClientRect();
+    const xp = (e.clientX - r.left) / r.width - 0.5;
+    const yp = (e.clientY - r.top)  / r.height - 0.5;
+    tRX=yp*-ROTATE; tRY=xp*ROTATE;
+    tTX=xp*-TRANSLATE; tTY=yp*TRANSLATE;
+    tGX=(xp+0.5)*100; tGY=(yp+0.5)*100;
+    tSc=1.04; go();
+  }
+
+  function onLeave() {
+    tRX=0; tRY=0; tTX=0; tTY=0; tGX=50; tGY=50; tSc=1; go();
+  }
+
+  wrap.addEventListener('mousemove', onMove);
+  wrap.addEventListener('mouseleave', onLeave);
+
+  return () => {
+    wrap.removeEventListener('mousemove', onMove);
+    wrap.removeEventListener('mouseleave', onLeave);
+    if (raf) cancelAnimationFrame(raf);
+  };
 }
 
 export default function Practice({
@@ -122,16 +133,17 @@ export default function Practice({
       reps:     c.reps     || 0,
     }));
 
-  const [cards, setCards]               = useState<Card[]>(() => initCards(deck.cards));
-  const [current, setCurrent]           = useState(0);
-  const [flipped, setFlipped]           = useState(false);
+  const [cards, setCards]                   = useState<Card[]>(() => initCards(deck.cards));
+  const [current, setCurrent]               = useState(0);
+  const [flipped, setFlipped]               = useState(false);
   const [sessionRatings, setSessionRatings] = useState<Record<number, number>>({});
-  const [session, setSession]           = useState({ correct: 0, incorrect: 0 });
-  const [animDir, setAnimDir]           = useState<'in'|'out-left'|'out-right'>('in');
-  const [streakFlash, setStreakFlash]   = useState(false);
-  const [showKeyHint, setShowKeyHint]   = useState(true);
-  const cardRef                         = useRef<HTMLDivElement>(null);
-  const stackWrapRef                    = useRef<HTMLDivElement>(null);
+  const [session, setSession]               = useState({ correct: 0, incorrect: 0 });
+  const [animDir, setAnimDir]               = useState<'in'|'out-left'|'out-right'>('in');
+  const [streakFlash, setStreakFlash]        = useState(false);
+  const [showKeyHint, setShowKeyHint]        = useState(true);
+
+  const cometRef = useRef<HTMLDivElement>(null);
+  const glareRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setCards(initCards(deck.cards));
@@ -144,9 +156,15 @@ export default function Practice({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deck.id]);
 
-  const card     = cards[current];
-  const done     = current >= cards.length;
-  const progress = current / cards.length;
+  /* Attach comet tilt whenever card is visible */
+  useEffect(() => {
+    if (!cometRef.current || !glareRef.current) return;
+    const cleanup = attachCometTilt(cometRef.current, glareRef.current);
+    return cleanup;
+  });
+
+  const card = cards[current];
+  const done = current >= cards.length;
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -163,6 +181,7 @@ export default function Practice({
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [flipped, done, current]);
 
   useEffect(() => { if (flipped) setShowKeyHint(false); }, [flipped]);
@@ -173,7 +192,7 @@ export default function Practice({
   }, [cards, deck, onFinish, onRegisterSave]);
 
   const answer = (quality: number) => {
-    if (quality === 5 && cardRef.current) spawnConfetti(cardRef.current);
+    if (quality === 5 && cometRef.current) spawnConfetti(cometRef.current);
     setAnimDir(quality >= 3 ? 'out-right' : 'out-left');
     const cardSnapshot  = card;
     const indexSnapshot = current;
@@ -199,7 +218,7 @@ export default function Practice({
     }
   };
 
-  /* ── DONE SCREEN ──────────────────────────────────────────────── */
+  /* ── DONE SCREEN ─────────────────────────────────────────────── */
   if (done) {
     const score    = Math.round((session.correct / cards.length) * 100);
     const ratings  = Object.values(sessionRatings);
@@ -228,51 +247,55 @@ export default function Practice({
               <circle cx="58" cy="58" r="46" fill="none" stroke="#7F77DD" strokeWidth="9"
                 strokeLinecap="round"
                 strokeDasharray={`${circ}`}
-                strokeDashoffset={`${circ*(1-score/100)}`}
+                strokeDashoffset={`${circ * (1 - score / 100)}`}
                 transform="rotate(-90 58 58)"
-                style={{transition:'stroke-dashoffset 1s cubic-bezier(0.4,0,0.2,1)'}}
+                style={{ transition: 'stroke-dashoffset 1s cubic-bezier(0.4,0,0.2,1)' }}
               />
-              <text x="58" y="54" textAnchor="middle" fill="currentColor"
+              <text x="58" y="54" textAnchor="middle"
                 fontFamily="'Fraunces',Georgia,serif" fontWeight="700" fontSize="24"
-                style={{fill:'var(--done-text)'}}>
+                fill="#1a1a2e">
                 {score}%
               </text>
-              <text x="58" y="70" textAnchor="middle" fontSize="12"
-                style={{fill:'var(--done-muted)'}} fontFamily="'DM Sans',sans-serif">
+              <text x="58" y="70" textAnchor="middle" fontSize="12" fill="#888"
+                fontFamily="'DM Sans',sans-serif">
                 score
               </text>
             </svg>
           </div>
           <div className="mastery-grid">
             {[
-              { label:'Mastered', val:mastered, cls:'mc-green' },
-              { label:'Shaky',    val:shaky,    cls:'mc-amber' },
-              { label:'Missed',   val:missed,   cls:'mc-red'   },
-            ].map(({ label,val,cls })=>(
+              { label: 'Mastered', val: mastered, cls: 'mc-green' },
+              { label: 'Shaky',    val: shaky,    cls: 'mc-amber' },
+              { label: 'Missed',   val: missed,   cls: 'mc-red'   },
+            ].map(({ label, val, cls }) => (
               <div key={label} className={`mastery-card ${cls}`}>
                 <span className="mastery-val">{val}</span>
                 <span className="mastery-label">{label}</span>
                 <div className="mastery-bar-track">
                   <div className="mastery-bar-fill"
-                    style={{width:`${cards.length?(val/cards.length)*100:0}%`}}/>
+                    style={{ width: `${cards.length ? (val / cards.length) * 100 : 0}%` }}/>
                 </div>
               </div>
             ))}
           </div>
           <div className="done-actions">
-            <button className="btn-primary" onClick={()=>onFinish({...deck,cards})}>Back to Library</button>
-            <button className="btn-ghost" onClick={()=>{
+            <button className="btn-primary" onClick={() => onFinish({ ...deck, cards })}>
+              Back to Library
+            </button>
+            <button className="btn-ghost" onClick={() => {
               setCurrent(0); setFlipped(false);
-              setSession({correct:0,incorrect:0}); setSessionRatings({});
-            }}>Retry session</button>
+              setSession({ correct: 0, incorrect: 0 }); setSessionRatings({});
+            }}>
+              Retry session
+            </button>
           </div>
         </div>
       </>
     );
   }
 
-  /* ── PRACTICE SCREEN ──────────────────────────────────────────── */
-  const pct = Math.round(progress * 100);
+  /* ── PRACTICE SCREEN ─────────────────────────────────────────── */
+  const pct = Math.round((current / cards.length) * 100);
 
   return (
     <>
@@ -281,7 +304,7 @@ export default function Practice({
 
         {/* Header */}
         <div className="practice-header">
-          <button className="exit-btn" onClick={()=>onFinish({...deck,cards})}>
+          <button className="exit-btn" onClick={() => onFinish({ ...deck, cards })}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
               <path d="M19 12H5M12 5l-7 7 7 7"/>
@@ -293,7 +316,7 @@ export default function Practice({
             {deck.name}
           </div>
           <div className="counter-badge">
-            <span className="counter-current">{current+1}</span>
+            <span className="counter-current">{current + 1}</span>
             <span className="counter-sep">/</span>
             <span className="counter-total">{cards.length}</span>
           </div>
@@ -301,13 +324,15 @@ export default function Practice({
 
         {/* Progress bar */}
         <div className="progress-track">
-          <div className="progress-fill" style={{width:`${pct}%`}}/>
-          {pct>0&&pct<100&&<div className="progress-head" style={{left:`${pct}%`}}/>}
+          <div className="progress-fill" style={{ width: `${pct}%` }}/>
+          {pct > 0 && pct < 100 && (
+            <div className="progress-head" style={{ left: `${pct}%` }}/>
+          )}
         </div>
 
         {/* Streak */}
         {session.correct > 1 && (
-          <div className={`streak-bar${streakFlash?' flash':''}`}>
+          <div className={`streak-bar${streakFlash ? ' flash' : ''}`}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="#EF9F27">
               <path d="M13 2L4.09 12.97A1 1 0 005 14.5h5.5L10 22l9.91-10.97A1 1 0 0019 9.5h-5.5z"/>
             </svg>
@@ -315,72 +340,54 @@ export default function Practice({
           </div>
         )}
 
-        {/* ── Card stack wrapper ── */}
-        <div
-          ref={stackWrapRef}
-          style={{
-            position: 'relative',
-            marginBottom: '38px',
-            /* Extra bottom padding so ghost cards don't get clipped */
-            paddingBottom: '20px',
-          }}
-        >
-          {/* Ghost cards behind */}
-          <CardStack
-            flipped={flipped}
-            cardCount={cards.length}
-            currentIndex={current}
-          />
-
-          {/* Main active card */}
-          <div
-            ref={cardRef}
-            className={`card-shell anim-${animDir}${flipped?' is-flipped':''}`}
-            onClick={()=>setFlipped(f=>!f)}
-            tabIndex={0}
-            onKeyDown={e=>{
-              if (e.code==='Enter'){e.preventDefault();setFlipped(f=>!f);}
-            }}
-            role="button"
-            aria-label={flipped?'Showing answer — click to flip back':'Showing question — click to reveal answer'}
-            style={{ position: 'relative', zIndex: 2 }}
-          >
-            {!flipped ? (
-              <div className="card-face face-front">
-                <div className="card-side-label tag-q">
-                  <span className="side-dot dot-q"/>
-                  Question
+        {/* Card stack — no ghost cards, just the comet tilt wrapper */}
+        <div className="stack-wrap">
+          <div className="comet-wrap" ref={cometRef}>
+            <div
+              className={`card-shell anim-${animDir}${flipped ? ' is-flipped' : ''}`}
+              onClick={() => setFlipped(f => !f)}
+              tabIndex={0}
+              onKeyDown={e => {
+                if (e.code === 'Enter') { e.preventDefault(); setFlipped(f => !f); }
+              }}
+              role="button"
+              aria-label={flipped ? 'Showing answer' : 'Showing question'}
+            >
+              {!flipped ? (
+                <div className="card-face face-front">
+                  {/* Label: no dot, black text */}
+                  <div className="card-side-label">Question</div>
+                  <p className="card-text">{card.question}</p>
+                  <div className="card-bottom-hint">
+                    <span className="tap-hint">Tap to reveal</span>
+                    <span className="kbd-hint"><kbd>Space</kbd> to flip</span>
+                  </div>
                 </div>
-                <p className="card-text">{card.question}</p>
-                <div className="card-bottom-hint">
-                  <span className="tap-hint">Tap to reveal</span>
-                  <span className="kbd-hint"><kbd>Space</kbd> to flip</span>
+              ) : (
+                <div className="card-face face-back">
+                  {/* Label: no dot, black text */}
+                  <div className="card-side-label">Answer</div>
+                  <p className="card-text answer-text">{card.answer}</p>
+                  <div className="card-bottom-hint">
+                    <span className="kbd-hint">Rate: <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></span>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className="card-face face-back">
-                <div className="card-side-label tag-a">
-                  <span className="side-dot dot-a"/>
-                  Answer
-                </div>
-                <p className="card-text answer-text">{card.answer}</p>
-                <div className="card-bottom-hint">
-                  <span className="kbd-hint">Rate: <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></span>
-                </div>
-              </div>
-            )}
+              )}
+            </div>
+            {/* Glare overlay */}
+            <div className="card-glare" ref={glareRef}/>
           </div>
         </div>
 
         {/* Rating buttons */}
-        <div className={`rating-row${flipped?' visible':''}`}>
+        <div className={`rating-row${flipped ? ' visible' : ''}`}>
           {[
-            { q:1, label:'Missed',  sub:'Show again soon', cls:'btn-miss',  icon:'✕' },
-            { q:3, label:'Shaky',   sub:'Needed effort',   cls:'btn-shaky', icon:'~' },
-            { q:5, label:'Got it!', sub:'Easy recall',     cls:'btn-got',   icon:'✓' },
-          ].map(({q,label,sub,cls,icon})=>(
+            { q: 1, label: 'Missed',  sub: 'Show again soon', cls: 'btn-miss',  icon: '✕' },
+            { q: 3, label: 'Shaky',   sub: 'Needed effort',   cls: 'btn-shaky', icon: '~' },
+            { q: 5, label: 'Got it!', sub: 'Easy recall',     cls: 'btn-got',   icon: '✓' },
+          ].map(({ q, label, sub, cls, icon }) => (
             <button key={q} className={`rating-btn ${cls}`}
-              onClick={e=>{e.stopPropagation();answer(q);}}>
+              onClick={e => { e.stopPropagation(); answer(q); }}>
               <span className="r-icon-wrap"><span className="r-icon">{icon}</span></span>
               <span className="r-label">{label}</span>
               <span className="r-sub">{sub}</span>
@@ -410,32 +417,28 @@ const STYLES = `
   100% { transform: translate(var(--dx), var(--dy)) rotate(480deg) scale(0.3); opacity:0; }
 }
 @keyframes card-in {
-  from { opacity:0; transform: translateY(24px) scale(0.96); }
-  to   { opacity:1; transform: translateY(0)    scale(1); }
+  from { opacity:0; transform: translateY(28px) scale(0.95); }
+  to   { opacity:1; transform: translateY(0) scale(1); }
 }
 @keyframes card-out-right {
-  from { opacity:1; transform: translateX(0)    rotate(0deg); }
-  to   { opacity:0; transform: translateX(96px) rotate(5deg); }
+  from { opacity:1; transform: translateX(0) rotate(0deg); }
+  to   { opacity:0; transform: translateX(110px) rotate(6deg); }
 }
 @keyframes card-out-left {
-  from { opacity:1; transform: translateX(0)     rotate(0deg); }
-  to   { opacity:0; transform: translateX(-96px) rotate(-5deg); }
+  from { opacity:1; transform: translateX(0) rotate(0deg); }
+  to   { opacity:0; transform: translateX(-110px) rotate(-6deg); }
 }
 @keyframes streak-flash {
-  0%,100% { background: rgba(239,159,39,0.10); }
-  40%     { background: rgba(239,159,39,0.28); transform: scale(1.03); }
+  0%,100% { background: rgba(239,159,39,0.12); }
+  40%     { background: rgba(239,159,39,0.30); transform: scale(1.03); }
 }
 @keyframes head-pulse {
-  0%,100% { box-shadow: 0 0 0 3px rgba(127,119,221,0.25); }
-  50%     { box-shadow: 0 0 0 6px rgba(127,119,221,0.10); }
+  0%,100% { box-shadow: 0 0 0 3px rgba(127,119,221,0.22); }
+  50%     { box-shadow: 0 0 0 6px rgba(127,119,221,0.08); }
 }
 @keyframes face-appear {
-  from { opacity:0; transform: translateY(6px); }
+  from { opacity:0; transform: translateY(8px); }
   to   { opacity:1; transform: translateY(0); }
-}
-@keyframes ghost-cycle {
-  from { transform: translateY(18px) scale(0.92); opacity: 0.5; }
-  to   { transform: translateY(9px)  scale(0.96); opacity: 0.7; }
 }
 
 :root {
@@ -451,24 +454,21 @@ const STYLES = `
   --red: #E24B4A;
   --red-light: #FCEBEB;
   --red-mid: #F7C1C1;
-  --done-text: #1a1a2e;
-  --done-muted: #888;
-  --card-bg: rgba(255,255,255,0.92);
-  --card-border: rgba(127,119,221,0.14);
-  --card-shadow: 0 2px 32px rgba(127,119,221,0.08), 0 1px 4px rgba(0,0,0,0.05);
+  --glass-blur: blur(28px) saturate(1.7);
   --text-primary: #0f0f1a;
-  --text-secondary: rgba(15,15,26,0.45);
-  --radius-card: 24px;
-  --radius-btn: 16px;
+  --text-secondary: rgba(15,15,26,0.46);
+  --radius-card: 28px;
+  --radius-btn: 18px;
 }
 
 .practice-wrap {
-  max-width: 620px;
+  max-width: 640px;
   margin: 0 auto;
-  padding: 10px 2px 56px;
+  padding: 20px 16px 64px;
   font-family: 'DM Sans', sans-serif;
 }
 
+/* ── Header ── */
 .practice-header {
   display: flex;
   align-items: center;
@@ -478,26 +478,36 @@ const STYLES = `
 
 .exit-btn {
   display: flex; align-items: center; gap: 6px;
-  background: none; border: none;
+  background: rgba(255,255,255,0.45);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255,255,255,0.65);
   color: var(--text-secondary);
   font-family: 'DM Sans', sans-serif;
   font-size: 13px; font-weight: 500;
-  cursor: pointer; padding: 6px 10px;
-  border-radius: 10px;
-  transition: background 0.15s, color 0.15s;
+  cursor: pointer; padding: 7px 14px;
+  border-radius: 12px;
+  transition: background 0.15s, color 0.15s, transform 0.15s;
+  box-shadow: 0 2px 8px rgba(100,90,200,0.07);
 }
-.exit-btn:hover { background: rgba(127,119,221,0.07); color: var(--brand-dark); }
+.exit-btn:hover {
+  background: rgba(255,255,255,0.65);
+  color: var(--brand-dark);
+  transform: translateY(-1px);
+}
 
 .deck-pill {
   display: flex; align-items: center; gap: 8px;
-  background: rgba(255,255,255,0.75);
-  border: 1px solid var(--card-border);
-  border-radius: 999px; padding: 6px 16px;
+  background: rgba(255,255,255,0.50);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255,255,255,0.70);
+  border-radius: 999px; padding: 7px 18px;
   font-size: 12.5px; font-weight: 600;
   color: var(--brand-dark); letter-spacing: 0.01em;
-  max-width: 210px; overflow: hidden;
+  max-width: 200px; overflow: hidden;
   text-overflow: ellipsis; white-space: nowrap;
-  box-shadow: 0 1px 6px rgba(127,119,221,0.07);
+  box-shadow: 0 2px 10px rgba(100,90,200,0.08);
 }
 .deck-pill-dot {
   width: 7px; height: 7px; border-radius: 50%;
@@ -505,14 +515,15 @@ const STYLES = `
 }
 
 .counter-badge { display: flex; align-items: baseline; gap: 2px; font-family: 'Fraunces', Georgia, serif; }
-.counter-current { font-size: 19px; font-weight: 700; color: var(--text-primary); }
-.counter-sep { font-size: 14px; color: rgba(15,15,26,0.22); margin: 0 2px; }
+.counter-current { font-size: 20px; font-weight: 700; color: var(--text-primary); }
+.counter-sep { font-size: 14px; color: rgba(15,15,26,0.20); margin: 0 2px; }
 .counter-total { font-size: 14px; font-weight: 400; color: var(--text-secondary); }
 
+/* ── Progress ── */
 .progress-track {
   position: relative; height: 5px;
-  background: rgba(15,15,26,0.07);
-  border-radius: 999px; margin-bottom: 16px; overflow: visible;
+  background: rgba(15,15,26,0.08);
+  border-radius: 999px; margin-bottom: 18px; overflow: visible;
 }
 .progress-fill {
   height: 100%;
@@ -529,70 +540,117 @@ const STYLES = `
   animation: head-pulse 1.8s ease-in-out infinite;
 }
 
+/* ── Streak ── */
 .streak-bar {
   display: inline-flex; align-items: center; gap: 7px;
-  background: rgba(239,159,39,0.10);
-  border: 1px solid rgba(239,159,39,0.25);
+  background: rgba(239,159,39,0.12);
+  border: 1px solid rgba(239,159,39,0.28);
   border-radius: 999px; padding: 5px 14px;
   font-size: 12.5px; font-weight: 600;
-  color: #633806; margin-bottom: 20px;
+  color: #633806; margin-bottom: 22px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 .streak-bar.flash { animation: streak-flash 0.55s ease; }
 
-/* ── Card shell ── */
+/* ── Stack wrapper (no ghost cards) ── */
+.stack-wrap {
+  position: relative;
+  margin-bottom: 40px;
+  padding-bottom: 4px;
+  perspective: 1000px;
+}
+
+/* ── Comet tilt wrapper ── */
+.comet-wrap {
+  position: relative;
+  z-index: 2;
+  border-radius: var(--radius-card);
+  will-change: transform;
+  transform-style: preserve-3d;
+  /* Soft, light shadow — no dark blotch on hover */
+  box-shadow:
+    0 2px 8px rgba(100,90,200,0.06),
+    0 8px 24px rgba(100,90,200,0.08);
+  transition: box-shadow 0.3s ease;
+}
+.comet-wrap:hover {
+  box-shadow:
+    0 4px 16px rgba(100,90,200,0.10),
+    0 16px 40px rgba(100,90,200,0.12);
+}
+
+/* ── Glare overlay ── */
+.card-glare {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  border-radius: var(--radius-card);
+  mix-blend-mode: overlay;
+  opacity: 0.55;
+  transition: opacity 0.2s;
+}
+
+/* ── Card shell (liquid glass) ── */
 .card-shell {
   position: relative;
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  border-radius: var(--radius-card);
   min-height: 300px; height: 300px;
+  border-radius: var(--radius-card);
   cursor: pointer; overflow: hidden;
-  box-shadow: var(--card-shadow);
-  transition: border-color 0.22s, box-shadow 0.22s, transform 0.2s cubic-bezier(0.22,1,0.36,1);
+  background: linear-gradient(
+    135deg,
+    rgba(255,255,255,0.72) 0%,
+    rgba(255,255,255,0.42) 40%,
+    rgba(255,255,255,0.52) 100%
+  );
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid rgba(255,255,255,0.72);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.90),
+    inset 0 -1px 0 rgba(255,255,255,0.28),
+    0 2px 12px rgba(127,119,221,0.06),
+    0 1px 4px rgba(0,0,0,0.03);
   outline: none;
   -webkit-tap-highlight-color: transparent;
+  transform-style: preserve-3d;
 }
-.card-shell:hover {
-  border-color: rgba(127,119,221,0.30);
-  box-shadow: 0 8px 48px rgba(127,119,221,0.14), 0 2px 8px rgba(0,0,0,0.06);
-  transform: translateY(-5px) scale(1.005);
-}
-.card-shell:active { transform: translateY(-2px) scale(0.997); }
-.card-shell:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
 .card-shell.is-flipped {
-  border-color: rgba(29,158,117,0.22);
-  background: rgba(255,255,255,0.95);
-  box-shadow: 0 6px 40px rgba(29,158,117,0.10), 0 1px 4px rgba(0,0,0,0.05);
+  background: linear-gradient(
+    135deg,
+    rgba(225,245,238,0.78) 0%,
+    rgba(255,255,255,0.52) 45%,
+    rgba(225,245,238,0.62) 100%
+  );
+  border-color: rgba(255,255,255,0.80);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.95),
+    inset 0 -1px 0 rgba(29,158,117,0.15),
+    0 4px 20px rgba(29,158,117,0.08),
+    0 1px 4px rgba(0,0,0,0.03);
 }
-.card-shell.is-flipped:hover {
-  border-color: rgba(29,158,117,0.38);
-  box-shadow: 0 10px 52px rgba(29,158,117,0.16), 0 2px 8px rgba(0,0,0,0.06);
-  transform: translateY(-5px) scale(1.005);
-}
-.card-shell.anim-in { animation: card-in 0.34s cubic-bezier(0.22,1,0.36,1) forwards; }
+.card-shell:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
+.card-shell.anim-in        { animation: card-in        0.36s cubic-bezier(0.22,1,0.36,1) forwards; }
 .card-shell.anim-out-right { animation: card-out-right 0.26s ease-in forwards; }
 .card-shell.anim-out-left  { animation: card-out-left  0.26s ease-in forwards; }
 
+/* ── Card faces ── */
 .card-face {
   position: absolute; inset: 0;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
   padding: 48px 52px 52px; text-align: center;
-  transition: opacity 0.18s ease;
 }
 .face-back { animation: face-appear 0.22s ease forwards; }
 
+/* Side label — no dot, plain black */
 .card-side-label {
   position: absolute; top: 20px; left: 24px;
-  display: flex; align-items: center; gap: 7px;
-  font-size: 11px; font-weight: 600;
+  font-size: 11px; font-weight: 700;
   letter-spacing: 0.10em; text-transform: uppercase;
+  color: #0f0f1a;
 }
-.tag-q { color: rgba(127,119,221,0.7); }
-.tag-a { color: rgba(29,158,117,0.75); }
-.side-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-.dot-q { background: rgba(127,119,221,0.55); }
-.dot-a { background: rgba(29,158,117,0.60); }
 
 .card-text {
   font-family: 'DM Sans', sans-serif;
@@ -615,9 +673,11 @@ const STYLES = `
 }
 kbd {
   display: inline-flex; align-items: center; justify-content: center;
-  background: rgba(255,255,255,0.9);
+  background: rgba(255,255,255,0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(15,15,26,0.13);
-  border-bottom-width: 2px; border-radius: 5px;
+  border-bottom-width: 2px; border-radius: 6px;
   padding: 1px 8px;
   font-family: 'DM Sans', sans-serif;
   font-size: 11px; font-weight: 600;
@@ -629,11 +689,11 @@ kbd {
 /* ── Rating buttons ── */
 .rating-row {
   display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;
-  opacity: 0; transform: translateY(12px);
+  opacity: 0; transform: translateY(14px);
   pointer-events: none;
-  transition: opacity 0.24s ease, transform 0.24s ease;
+  transition: opacity 0.26s ease, transform 0.26s ease;
 }
-.rating-row.visible { opacity:1; transform:translateY(0); pointer-events:all; }
+.rating-row.visible { opacity: 1; transform: translateY(0); pointer-events: all; }
 
 .rating-btn {
   position: relative; display: flex; flex-direction: column;
@@ -641,131 +701,152 @@ kbd {
   padding: 18px 10px 16px;
   border-radius: var(--radius-btn); border: 1px solid;
   cursor: pointer; font-family: 'DM Sans', sans-serif;
+  backdrop-filter: blur(20px) saturate(1.5);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
   transition: transform 0.2s cubic-bezier(0.22,1,0.36,1), box-shadow 0.2s, background 0.15s;
   -webkit-tap-highlight-color: transparent; overflow: hidden;
 }
-.rating-btn::after {
-  content: ''; position: absolute; inset: 0;
-  background: rgba(255,255,255,0.25); opacity: 0;
-  transition: opacity 0.15s;
+.rating-btn::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 60%);
+  pointer-events: none; border-radius: inherit;
 }
-.rating-btn:hover::after { opacity: 1; }
-.rating-btn:hover { transform: translateY(-5px); }
+.rating-btn:hover { transform: translateY(-6px); }
 .rating-btn:active { transform: translateY(-2px) scale(0.97); }
 .rating-btn:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 
-.btn-miss  { background:#FCEBEB; border-color:#F7C1C1; box-shadow:0 2px 14px rgba(226,75,74,0.07); }
-.btn-miss:hover  { background:#F9DADA; box-shadow:0 6px 28px rgba(226,75,74,0.14); }
-.btn-shaky { background:#FAEEDA; border-color:#FAC775; box-shadow:0 2px 14px rgba(186,117,23,0.07); }
-.btn-shaky:hover { background:#F5E4C4; box-shadow:0 6px 28px rgba(186,117,23,0.14); }
-.btn-got   { background:#E1F5EE; border-color:#9FE1CB; box-shadow:0 2px 14px rgba(29,158,117,0.07); }
-.btn-got:hover   { background:#C8EDDF; box-shadow:0 6px 28px rgba(29,158,117,0.14); }
+.btn-miss  { background: rgba(252,235,235,0.72); border-color: rgba(247,193,193,0.80); box-shadow: 0 2px 14px rgba(226,75,74,0.08), inset 0 1px 0 rgba(255,255,255,0.80); }
+.btn-miss:hover  { background: rgba(249,218,218,0.85); box-shadow: 0 8px 32px rgba(226,75,74,0.16), inset 0 1px 0 rgba(255,255,255,0.90); }
+.btn-shaky { background: rgba(250,238,218,0.72); border-color: rgba(250,199,117,0.80); box-shadow: 0 2px 14px rgba(186,117,23,0.08), inset 0 1px 0 rgba(255,255,255,0.80); }
+.btn-shaky:hover { background: rgba(245,228,196,0.85); box-shadow: 0 8px 32px rgba(186,117,23,0.16), inset 0 1px 0 rgba(255,255,255,0.90); }
+.btn-got   { background: rgba(225,245,238,0.72); border-color: rgba(159,225,203,0.80); box-shadow: 0 2px 14px rgba(29,158,117,0.08), inset 0 1px 0 rgba(255,255,255,0.80); }
+.btn-got:hover   { background: rgba(200,237,223,0.85); box-shadow: 0 8px 32px rgba(29,158,117,0.16), inset 0 1px 0 rgba(255,255,255,0.90); }
 
 .r-icon-wrap {
-  width:38px; height:38px; border-radius:50%;
-  display:flex; align-items:center; justify-content:center; margin-bottom:2px;
+  width: 38px; height: 38px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; margin-bottom: 2px;
 }
-.btn-miss  .r-icon-wrap { background:#F7C1C1; }
-.btn-shaky .r-icon-wrap { background:#FAC775; }
-.btn-got   .r-icon-wrap { background:#9FE1CB; }
-.r-icon { font-size:17px; font-family:monospace; line-height:1; font-weight:700; }
-.btn-miss  .r-icon { color:#791F1F; }
-.btn-shaky .r-icon { color:#633806; }
-.btn-got   .r-icon { color:#085041; }
-.r-label { font-size:14.5px; font-weight:600; letter-spacing:-0.01em; }
-.btn-miss  .r-label { color:#A32D2D; }
-.btn-shaky .r-label { color:#854F0B; }
-.btn-got   .r-label { color:#0F6E56; }
-.r-sub { font-size:11.5px; font-weight:400; color:rgba(15,15,26,0.38); }
+.btn-miss  .r-icon-wrap { background: rgba(247,193,193,0.65); }
+.btn-shaky .r-icon-wrap { background: rgba(250,199,117,0.65); }
+.btn-got   .r-icon-wrap { background: rgba(159,225,203,0.65); }
+.r-icon { font-size: 17px; font-family: monospace; line-height: 1; font-weight: 700; }
+.btn-miss  .r-icon { color: #791F1F; }
+.btn-shaky .r-icon { color: #633806; }
+.btn-got   .r-icon { color: #085041; }
+.r-label { font-size: 14.5px; font-weight: 600; letter-spacing: -0.01em; }
+.btn-miss  .r-label { color: #A32D2D; }
+.btn-shaky .r-label { color: #854F0B; }
+.btn-got   .r-label { color: #0F6E56; }
+.r-sub { font-size: 11.5px; font-weight: 400; color: rgba(15,15,26,0.38); }
 .r-key {
-  position:absolute; top:8px; right:10px;
-  font-size:10px; font-weight:600; opacity:0.32;
-  font-family:'DM Sans',sans-serif;
+  position: absolute; top: 8px; right: 10px;
+  font-size: 10px; font-weight: 600; opacity: 0.30;
+  font-family: 'DM Sans', sans-serif;
 }
-.btn-miss  .r-key { color:#A32D2D; }
-.btn-shaky .r-key { color:#854F0B; }
-.btn-got   .r-key { color:#0F6E56; }
-@media (hover:none) { .r-key { display:none; } }
+.btn-miss  .r-key { color: #A32D2D; }
+.btn-shaky .r-key { color: #854F0B; }
+.btn-got   .r-key { color: #0F6E56; }
+@media (hover: none) { .r-key { display: none; } }
 
 .bottom-kb-hint {
-  text-align:center; font-size:12.5px; color:var(--text-secondary);
-  margin-top:14px;
-  display:flex; align-items:center; justify-content:center; gap:6px;
+  text-align: center; font-size: 12.5px; color: var(--text-secondary);
+  margin-top: 14px;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
 }
-@media (hover:none) { .bottom-kb-hint { display:none; } }
+@media (hover: none) { .bottom-kb-hint { display: none; } }
 
 /* ── Done screen ── */
 .done-wrap {
-  max-width:500px; margin:0 auto; padding:3rem 0 5rem;
-  display:flex; flex-direction:column; align-items:center;
-  text-align:center; font-family:'DM Sans',sans-serif;
+  max-width: 500px; margin: 0 auto; padding: 3rem 0 5rem;
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center; font-family: 'DM Sans', sans-serif;
 }
 .done-icon {
-  width:80px; height:80px; border-radius:50%;
-  background:#EEEDFE; border:1px solid #AFA9EC;
-  display:flex; align-items:center; justify-content:center;
-  margin-bottom:22px;
-  box-shadow:0 0 0 8px rgba(127,119,221,0.07);
+  width: 80px; height: 80px; border-radius: 50%;
+  background: rgba(238,237,254,0.72);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.80);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 22px;
+  box-shadow: 0 0 0 8px rgba(127,119,221,0.07), 0 4px 20px rgba(127,119,221,0.12);
 }
 .done-title {
-  font-family:'Fraunces',Georgia,serif;
-  font-size:2.1rem; font-weight:700; letter-spacing:-0.5px;
-  color:var(--text-primary); margin-bottom:9px;
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 2.1rem; font-weight: 700; letter-spacing: -0.5px;
+  color: var(--text-primary); margin-bottom: 9px;
 }
-.done-sub { font-size:14.5px; color:var(--text-secondary); margin-bottom:30px; }
-.done-sub strong { color:rgba(15,15,26,0.7); font-weight:600; }
-.score-ring-wrap { margin-bottom:30px; }
+.done-sub { font-size: 14.5px; color: var(--text-secondary); margin-bottom: 30px; }
+.done-sub strong { color: rgba(15,15,26,0.7); font-weight: 600; }
+.score-ring-wrap { margin-bottom: 30px; }
 
 .mastery-grid {
-  display:grid; grid-template-columns:1fr 1fr 1fr;
-  gap:12px; width:100%; margin-bottom:36px;
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px; width: 100%; margin-bottom: 36px;
 }
 .mastery-card {
-  border-radius:18px; padding:20px 14px 16px;
-  display:flex; flex-direction:column;
-  align-items:center; gap:5px; border:1px solid;
+  border-radius: 18px; padding: 20px 14px 16px;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 5px; border: 1px solid;
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
 }
-.mc-green { background:#E1F5EE; border-color:#9FE1CB; }
-.mc-amber { background:#FAEEDA; border-color:#FAC775; }
-.mc-red   { background:#FCEBEB; border-color:#F7C1C1; }
+.mc-green { background: rgba(225,245,238,0.68); border-color: rgba(159,225,203,0.80); }
+.mc-amber { background: rgba(250,238,218,0.68); border-color: rgba(250,199,117,0.80); }
+.mc-red   { background: rgba(252,235,235,0.68); border-color: rgba(247,193,193,0.80); }
 .mastery-val {
-  font-family:'Fraunces',Georgia,serif;
-  font-size:2.2rem; font-weight:700; line-height:1;
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 2.2rem; font-weight: 700; line-height: 1;
 }
-.mc-green .mastery-val { color:#085041; }
-.mc-amber .mastery-val { color:#633806; }
-.mc-red   .mastery-val { color:#791F1F; }
-.mastery-label { font-size:11.5px; font-weight:600; letter-spacing:0.07em; text-transform:uppercase; }
-.mc-green .mastery-label { color:#0F6E56; }
-.mc-amber .mastery-label { color:#854F0B; }
-.mc-red   .mastery-label { color:#A32D2D; }
+.mc-green .mastery-val { color: #085041; }
+.mc-amber .mastery-val { color: #633806; }
+.mc-red   .mastery-val { color: #791F1F; }
+.mastery-label { font-size: 11.5px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; }
+.mc-green .mastery-label { color: #0F6E56; }
+.mc-amber .mastery-label { color: #854F0B; }
+.mc-red   .mastery-label { color: #A32D2D; }
 .mastery-bar-track {
-  width:100%; height:3px;
-  background:rgba(15,15,26,0.09);
-  border-radius:999px; margin-top:12px; overflow:hidden;
+  width: 100%; height: 3px;
+  background: rgba(15,15,26,0.09);
+  border-radius: 999px; margin-top: 12px; overflow: hidden;
 }
-.mastery-bar-fill { height:100%; border-radius:999px; transition:width 0.85s cubic-bezier(0.4,0,0.2,1); }
-.mc-green .mastery-bar-fill { background:#1D9E75; }
-.mc-amber .mastery-bar-fill { background:#BA7517; }
-.mc-red   .mastery-bar-fill { background:#E24B4A; }
+.mastery-bar-fill { height: 100%; border-radius: 999px; transition: width 0.85s cubic-bezier(0.4,0,0.2,1); }
+.mc-green .mastery-bar-fill { background: #1D9E75; }
+.mc-amber .mastery-bar-fill { background: #BA7517; }
+.mc-red   .mastery-bar-fill { background: #E24B4A; }
 
-.done-actions { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
+.done-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
 .btn-primary {
-  padding:12px 30px; background:var(--brand); border:none;
-  border-radius:14px; color:#fff;
-  font-family:'DM Sans',sans-serif; font-size:14.5px; font-weight:600;
-  cursor:pointer; box-shadow:0 2px 20px rgba(127,119,221,0.30);
-  transition:all 0.2s;
+  padding: 12px 30px;
+  background: rgba(127,119,221,0.85);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255,255,255,0.40); border-radius: 14px; color: #fff;
+  font-family: 'DM Sans', sans-serif; font-size: 14.5px; font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 20px rgba(127,119,221,0.28), inset 0 1px 0 rgba(255,255,255,0.35);
+  transition: all 0.2s;
 }
-.btn-primary:hover { background:var(--brand-dark); transform:translateY(-2px); box-shadow:0 6px 28px rgba(127,119,221,0.38); }
-.btn-primary:active { transform:translateY(0) scale(0.97); }
+.btn-primary:hover {
+  background: rgba(83,74,183,0.90);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 28px rgba(127,119,221,0.38);
+}
+.btn-primary:active { transform: translateY(0) scale(0.97); }
 .btn-ghost {
-  padding:12px 26px; background:rgba(255,255,255,0.75);
-  border:1px solid rgba(127,119,221,0.20); border-radius:14px;
-  color:var(--brand-dark);
-  font-family:'DM Sans',sans-serif; font-size:14.5px; font-weight:600;
-  cursor:pointer; transition:all 0.2s;
+  padding: 12px 26px;
+  background: rgba(255,255,255,0.55);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255,255,255,0.72); border-radius: 14px;
+  color: var(--brand-dark);
+  font-family: 'DM Sans', sans-serif; font-size: 14.5px; font-weight: 600;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.85), 0 2px 10px rgba(100,90,200,0.08);
+  transition: all 0.2s;
 }
-.btn-ghost:hover { background:var(--brand-light); transform:translateY(-2px); box-shadow:0 4px 18px rgba(127,119,221,0.12); }
-.btn-ghost:active { transform:translateY(0) scale(0.97); }
+.btn-ghost:hover {
+  background: rgba(238,237,254,0.75);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 18px rgba(127,119,221,0.14);
+}
+.btn-ghost:active { transform: translateY(0) scale(0.97); }
 `;
