@@ -533,14 +533,15 @@ const STYLES = `
 
 /* ── Streak ── */
 .streak-bar {
-  display: inline-flex; align-items: center; gap: 7px;
-  background: rgba(239,159,39,0.12);
-  border: 1px solid rgba(239,159,39,0.28);
-  border-radius: 999px; padding: 5px 14px;
+  display: inline-flex; align-items: center;
+  background: rgba(255,255,255,0.50);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255,255,255,0.70);
+  border-radius: 10px; padding: 6px 16px;
   font-size: 12.5px; font-weight: 600;
-  color: #633806; margin-bottom: 22px;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  color: var(--brand-dark); margin-bottom: 22px;
+  box-shadow: 0 2px 10px rgba(100,90,200,0.08);
 }
 .streak-bar.flash { animation: streak-flash 0.55s ease; }
 
@@ -610,14 +611,14 @@ const STYLES = `
 .card-shell.is-flipped {
   background: linear-gradient(
     135deg,
-    rgba(225,245,238,0.78) 0%,
-    rgba(255,255,255,0.52) 45%,
-    rgba(225,245,238,0.62) 100%
+    rgba(255,255,255,0.72) 0%,
+    rgba(255,255,255,0.42) 40%,
+    rgba(255,255,255,0.52) 100%
   );
-  border-color: rgba(255,255,255,0.80);
+  border-color: rgba(255,255,255,0.72);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.95),
-    inset 0 -1px 0 rgba(255,255,255,0.20),
+    inset 0 1px 0 rgba(255,255,255,0.90),
+    inset 0 -1px 0 rgba(255,255,255,0.28),
     0 2px 12px rgba(127,119,221,0.06),
     0 1px 4px rgba(0,0,0,0.03);
 }
