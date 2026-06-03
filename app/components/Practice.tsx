@@ -698,47 +698,68 @@ kbd {
   transition: transform 0.2s cubic-bezier(0.22,1,0.36,1), box-shadow 0.2s, background 0.15s;
   -webkit-tap-highlight-color: transparent; overflow: hidden;
 }
+/* Subtle top specular highlight on all buttons */
 .rating-btn::before {
   content: '';
   position: absolute; inset: 0;
-  background: linear-gradient(to bottom, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 60%);
-  pointer-events: none; border-radius: inherit;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.50) 0%, rgba(255,255,255,0) 55%);
+  pointer-events: none; border-radius: inherit; z-index: 0;
 }
-.rating-btn:hover { transform: translateY(-6px); }
+/* Shine sweep on hover — diagonal highlight travels left→right */
+.rating-btn::after {
+  content: '';
+  position: absolute;
+  top: -60%; left: -75%;
+  width: 50%; height: 220%;
+  background: linear-gradient(
+    105deg,
+    rgba(255,255,255,0) 0%,
+    rgba(255,255,255,0.52) 50%,
+    rgba(255,255,255,0) 100%
+  );
+  transform: skewX(-18deg) translateX(0);
+  opacity: 0;
+  pointer-events: none; border-radius: 0;
+  transition: opacity 0.15s, transform 0.45s cubic-bezier(0.22,1,0.36,1);
+}
+.rating-btn:hover::after {
+  opacity: 1;
+  transform: skewX(-18deg) translateX(380%);
+}
+.rating-btn:hover { transform: translateY(-5px); }
 .rating-btn:active { transform: translateY(-2px) scale(0.97); }
 .rating-btn:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 
-.btn-miss  { background: rgba(252,235,235,0.72); border-color: rgba(247,193,193,0.80); box-shadow: 0 2px 14px rgba(226,75,74,0.08), inset 0 1px 0 rgba(255,255,255,0.80); }
-.btn-miss:hover  { background: rgba(249,218,218,0.85); box-shadow: 0 8px 32px rgba(226,75,74,0.16), inset 0 1px 0 rgba(255,255,255,0.90); }
-.btn-shaky { background: rgba(250,238,218,0.72); border-color: rgba(250,199,117,0.80); box-shadow: 0 2px 14px rgba(186,117,23,0.08), inset 0 1px 0 rgba(255,255,255,0.80); }
-.btn-shaky:hover { background: rgba(245,228,196,0.85); box-shadow: 0 8px 32px rgba(186,117,23,0.16), inset 0 1px 0 rgba(255,255,255,0.90); }
-.btn-got   { background: rgba(225,245,238,0.72); border-color: rgba(159,225,203,0.80); box-shadow: 0 2px 14px rgba(29,158,117,0.08), inset 0 1px 0 rgba(255,255,255,0.80); }
-.btn-got:hover   { background: rgba(200,237,223,0.85); box-shadow: 0 8px 32px rgba(29,158,117,0.16), inset 0 1px 0 rgba(255,255,255,0.90); }
+/* All three buttons — same neutral glass base */
+.btn-miss, .btn-shaky, .btn-got {
+  background: rgba(255,255,255,0.50);
+  border-color: rgba(255,255,255,0.70);
+  box-shadow: 0 2px 10px rgba(100,90,200,0.08), inset 0 1px 0 rgba(255,255,255,0.80);
+}
+.btn-miss:hover, .btn-shaky:hover, .btn-got:hover {
+  background: rgba(255,255,255,0.62);
+  box-shadow: 0 6px 24px rgba(100,90,200,0.12), inset 0 1px 0 rgba(255,255,255,0.90);
+}
 
+/* Icon circles — subtle tinted but not saturated */
 .r-icon-wrap {
   width: 38px; height: 38px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center; margin-bottom: 2px;
 }
-.btn-miss  .r-icon-wrap { background: rgba(247,193,193,0.65); }
-.btn-shaky .r-icon-wrap { background: rgba(250,199,117,0.65); }
-.btn-got   .r-icon-wrap { background: rgba(159,225,203,0.65); }
+.btn-miss  .r-icon-wrap { background: rgba(226,75,74,0.12); }
+.btn-shaky .r-icon-wrap { background: rgba(186,117,23,0.12); }
+.btn-got   .r-icon-wrap { background: rgba(29,158,117,0.12); }
 .r-icon { font-size: 17px; font-family: monospace; line-height: 1; font-weight: 700; }
-.btn-miss  .r-icon { color: #791F1F; }
-.btn-shaky .r-icon { color: #633806; }
-.btn-got   .r-icon { color: #085041; }
-.r-label { font-size: 14.5px; font-weight: 600; letter-spacing: -0.01em; }
-.btn-miss  .r-label { color: #A32D2D; }
-.btn-shaky .r-label { color: #854F0B; }
-.btn-got   .r-label { color: #0F6E56; }
+.btn-miss  .r-icon { color: #A32D2D; }
+.btn-shaky .r-icon { color: #854F0B; }
+.btn-got   .r-icon { color: #0F6E56; }
+.r-label { font-size: 14.5px; font-weight: 600; letter-spacing: -0.01em; color: var(--text-primary); }
 .r-sub { font-size: 11.5px; font-weight: 400; color: rgba(15,15,26,0.38); }
 .r-key {
   position: absolute; top: 8px; right: 10px;
-  font-size: 10px; font-weight: 600; opacity: 0.30;
-  font-family: 'DM Sans', sans-serif;
+  font-size: 10px; font-weight: 600; opacity: 0.28;
+  font-family: 'DM Sans', sans-serif; color: var(--text-primary);
 }
-.btn-miss  .r-key { color: #A32D2D; }
-.btn-shaky .r-key { color: #854F0B; }
-.btn-got   .r-key { color: #0F6E56; }
 @media (hover: none) { .r-key { display: none; } }
 
 .bottom-kb-hint {
