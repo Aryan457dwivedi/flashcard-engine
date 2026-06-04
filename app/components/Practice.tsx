@@ -652,6 +652,14 @@ kbd {
 
 /* ── Rating buttons ── */
 .rating-row {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;
+  max-width: 420px; margin: 0 auto;
+  opacity: 0; transform: translateY(14px);
+  pointer-events: none;
+  transition: opacity 0.26s ease, transform 0.26s ease;
+}
+.rating-row.visible { opacity: 1; transform: translateY(0); pointer-events: all; }
+
 /* ── Rating group — single inline bar ── */
 .rating-row {
   display: flex; justify-content: center;
@@ -665,24 +673,14 @@ kbd {
   display: inline-flex; align-items: stretch;
   background: rgba(255,255,255,0.82);
   border: 1px solid rgba(220,218,240,0.80);
-  border-radius: 24px;
-  box-shadow:
-    0 2px 10px rgba(100,90,200,0.10),
-    inset 0 1px 0 rgba(255,255,255,0.95);
+  border-radius: 20px;
+  box-shadow: 0 2px 10px rgba(100,90,200,0.10), inset 0 1px 0 rgba(255,255,255,0.95);
   backdrop-filter: blur(20px) saturate(1.5);
   -webkit-backdrop-filter: blur(20px) saturate(1.5);
   overflow: hidden;
   position: relative;
-  transition: box-shadow 0.22s ease, border-color 0.22s ease;
 }
-.rating-group:hover {
-  border-color: rgba(127,119,221,0.45);
-  box-shadow:
-    0 0 0 4px rgba(127,119,221,0.12),
-    0 4px 20px rgba(100,90,200,0.14),
-    inset 0 1px 0 rgba(255,255,255,0.95);
-}
-/* shine sweep on hover */
+/* shine sweep on hover of the whole group */
 .rating-group::after {
   content: '';
   position: absolute;
@@ -696,8 +694,8 @@ kbd {
 .rating-group:hover::after { opacity: 1; transform: skewX(-18deg) translateX(460%); }
 
 .rg-btn {
-  position: relative; display: flex; align-items: center; gap: 8px;
-  padding: 16px 28px;
+  position: relative; display: flex; align-items: center; gap: 7px;
+  padding: 13px 22px;
   background: transparent; border: none;
   cursor: pointer; font-family: 'DM Sans', sans-serif;
   transition: background 0.15s;
@@ -707,15 +705,15 @@ kbd {
 .rg-btn:hover { background: rgba(127,119,221,0.07); }
 .rg-btn:active { background: rgba(127,119,221,0.13); }
 
-.rg-icon { font-size: 15px; font-family: monospace; font-weight: 700; line-height: 1; }
+.rg-icon { font-size: 14px; font-family: monospace; font-weight: 700; line-height: 1; }
 .rg-miss  .rg-icon { color: #A32D2D; }
 .rg-shaky .rg-icon { color: #854F0B; }
 .rg-got   .rg-icon { color: #0F6E56; }
 
-.rg-label { font-size: 14px; font-weight: 600; color: var(--text-primary); letter-spacing: -0.01em; }
+.rg-label { font-size: 13.5px; font-weight: 600; color: var(--text-primary); letter-spacing: -0.01em; }
 
 .rg-divider {
-  position: absolute; right: 0; top: 18%; height: 64%;
+  position: absolute; right: 0; top: 20%; height: 60%;
   width: 1px; background: rgba(180,176,220,0.40);
   pointer-events: none;
 }
