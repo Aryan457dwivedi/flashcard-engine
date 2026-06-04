@@ -133,25 +133,17 @@ const PANEL: React.CSSProperties = {
   transition: 'all .25s cubic-bezier(.4,0,.2,1)',
 };
 
-// Eyebrow — renders dot when provided
-function Eyebrow({ children, dot }: { children: React.ReactNode; dot?: string }) {
+// Eyebrow — dot prop kept for API compat but never renders a dot
+function Eyebrow({ children }: { children: React.ReactNode; dot?: string }) {
   return (
     <div style={{
-      display: 'inline-flex', alignItems: 'center', gap: '8px',
+      display: 'inline-flex', alignItems: 'center',
       fontSize: '10.5px', fontWeight: 700, color: 'rgba(15,15,26,0.5)',
       textTransform: 'uppercase', letterSpacing: '0.1em',
     }}>
-      {dot && <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: dot, boxShadow: `0 0 8px ${dot}` }} />}
       {children}
     </div>
   );
-}
-
-function Divider({ vertical = false }: { vertical?: boolean }) {
-  if (vertical) {
-    return <div style={{ width: '1px', alignSelf: 'stretch', background: 'linear-gradient(180deg, transparent, rgba(127,119,221,0.18), transparent)' }} />;
-  }
-  return <div style={{ height: '1px', width: '100%', background: 'linear-gradient(90deg, transparent, rgba(127,119,221,0.18), transparent)' }} />;
 }
 
 function statusBadge(pct: number) {
@@ -189,6 +181,17 @@ function Hoverable({ children, style, lift = 4 }: { children: React.ReactNode; s
   );
 }
 
+// ── iOS 26 liquid-glass surface ───────────────────────────────────────────
+const GLASS: React.CSSProperties = {
+  background: 'linear-gradient(135deg, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0.14) 100%)',
+  backdropFilter: 'blur(40px) saturate(180%)',
+  WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+  border: '1px solid rgba(255,255,255,0.45)',
+  borderBottom: '1px solid rgba(255,255,255,0.20)',
+  borderRight: '1px solid rgba(255,255,255,0.20)',
+  boxShadow: '0 8px 32px rgba(15,15,26,0.12), inset 0 1px 0 rgba(255,255,255,0.5), inset 0 -1px 0 rgba(255,255,255,0.1)',
+};
+
 // ═══════════════════════════════════════════════════════════════════════════
 //  DASHBOARD
 // ═══════════════════════════════════════════════════════════════════════════
@@ -216,12 +219,11 @@ export default function Dashboard({ decks }: { decks: Deck[] }) {
   const momentumPct = Math.min(100, Math.round((momentum / 2) * 100));
   const predictedMastery = Math.min(100, mastPct + Math.round((learning / Math.max(total, 1)) * 70));
 
-  // Trend (derived from momentum + ease)
   const trend = momentum >= 1 && globalEase >= 2.3
-    ? { dir: 'up' as const, label: 'Improving',       color: '#1D9E75', arrow: '↑' }
+    ? { label: 'Improving',       color: '#1D9E75', arrow: '↑' }
     : momentum < 0.5 || struggling > mastered
-      ? { dir: 'down' as const, label: 'Needs Attention', color: '#E24B4A', arrow: '↓' }
-      : { dir: 'flat' as const, label: 'Stable',          color: '#BA7517', arrow: '→' };
+      ? { label: 'Needs Attention', color: '#E24B4A', arrow: '↓' }
+      : { label: 'Stable',          color: '#BA7517', arrow: '→' };
 
   const heroStatus =
     learningScore >= 80 ? 'Mastery Accelerating' :
@@ -229,7 +231,6 @@ export default function Dashboard({ decks }: { decks: Deck[] }) {
     learningScore >= 35 ? 'Building Momentum'    :
     'Early Days';
 
-  // Confidence (composite signal)
   const confidence = total === 0 ? 0 : Math.min(99, Math.round(
     (practicedPct * 0.45) + (Math.min(100, Math.max(0, ((globalEase - 1.3) / 2.2) * 100)) * 0.35) + (mastPct * 0.20)
   ));
@@ -260,14 +261,14 @@ export default function Dashboard({ decks }: { decks: Deck[] }) {
 
   // Coach
   const coach = total === 0
-    ? { priority: 'LOW',            type: 'Onboarding',            conf: 50, color: '#534AB7', text: 'Create your first deck to begin.' }
+    ? { priority: 'LOW',          type: 'Onboarding',             conf: 50, color: '#534AB7', text: 'Create your first deck to begin.' }
     : struggling > mastered
-      ? { priority: 'HIGH PRIORITY', type: 'Review struggling cards', conf: 92, color: '#E24B4A', text: `You have ${struggling} struggling cards. Reviewing them next could significantly improve mastery and unblock new material.` }
+      ? { priority: 'HIGH PRIORITY', type: 'Review struggling cards',  conf: 92, color: '#E24B4A', text: `You have ${struggling} struggling cards. Reviewing them next could significantly improve mastery and unblock new material.` }
       : practicedPct < 20
-        ? { priority: 'HIGH PRIORITY', type: 'Start a focused session', conf: 88, color: '#BA7517', text: `Most cards are untouched. A single 10-minute session today builds the routine that compounds over weeks.` }
+        ? { priority: 'HIGH PRIORITY', type: 'Start a focused session',  conf: 88, color: '#BA7517', text: `Most cards are untouched. A single 10-minute session today builds the routine that compounds over weeks.` }
         : mastPct >= 70
-          ? { priority: 'MAINTENANCE',   type: 'Reinforce retention',    conf: 84, color: '#1D9E75', text: 'Your retention is strong. Continue consistent practice on the cards still in learning to lock in mastery.' }
-          : { priority: 'MEDIUM',        type: 'Advance learning cards', conf: 76, color: '#534AB7', text: `${learning} cards are in active learning. Daily reviews will push them into mastery within a week.` };
+          ? { priority: 'MAINTENANCE',   type: 'Reinforce retention',      conf: 84, color: '#1D9E75', text: 'Your retention is strong. Continue consistent practice on the cards still in learning to lock in mastery.' }
+          : { priority: 'MEDIUM',        type: 'Advance learning cards',   conf: 76, color: '#534AB7', text: `${learning} cards are in active learning. Daily reviews will push them into mastery within a week.` };
 
   // ── Empty state ────────────────────────────────────────────────────────
   if (decks.length === 0) {
@@ -317,100 +318,109 @@ export default function Dashboard({ decks }: { decks: Deck[] }) {
   return (
     <div style={{ fontFamily: "'DM Sans', sans-serif", color: '#0f0f1a', display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
-      {/* ═══════════════════════════ HERO ═══════════════════════════ */}
+      {/* ═══════════════════════════ HERO — iOS 26 glass ═══════════════════════════ */}
       <section style={{
         position: 'relative',
-        background: 'radial-gradient(120% 140% at 0% 0%, #2E2670 0%, transparent 55%), radial-gradient(120% 140% at 100% 100%, #1D9E75 0%, transparent 55%), linear-gradient(135deg, #0E0A2E 0%, #1B1742 55%, #2E2670 100%)',
         borderRadius: '32px',
-        padding: '44px 48px',
         overflow: 'hidden',
-        boxShadow: '0 30px 80px rgba(14,10,46,0.40), 0 1px 0 rgba(255,255,255,0.08) inset',
-        border: '1px solid rgba(255,255,255,0.08)',
-        color: '#fff',
+        background: 'linear-gradient(140deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
+        padding: '2px',
+        boxShadow: '0 30px 80px rgba(14,10,46,0.40)',
       }}>
-        {/* layered glow */}
-        <div aria-hidden style={{ position: 'absolute', top: '-180px', right: '-120px', width: '460px', height: '460px', background: 'radial-gradient(circle, rgba(159,225,203,0.30), transparent 65%)', filter: 'blur(10px)' }} />
-        <div aria-hidden style={{ position: 'absolute', bottom: '-220px', left: '-140px', width: '520px', height: '520px', background: 'radial-gradient(circle, rgba(127,119,221,0.40), transparent 65%)', filter: 'blur(10px)' }} />
-        <div aria-hidden style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 50% 0%, rgba(255,255,255,0.08), transparent 60%)' }} />
-        {/* subtle grid */}
-        <div aria-hidden style={{ position: 'absolute', inset: 0, opacity: 0.06,
-          backgroundImage: 'linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)',
-          backgroundSize: '48px 48px', maskImage: 'radial-gradient(ellipse at center, black 30%, transparent 75%)' }} />
+        {/* Ambient blobs — sit behind the glass */}
+        <div aria-hidden style={{ position: 'absolute', inset: 0, borderRadius: '32px', overflow: 'hidden', pointerEvents: 'none' }}>
+          <div style={{ position: 'absolute', top: '-180px', right: '-120px', width: '460px', height: '460px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(159,225,203,0.30), transparent 65%)' }} />
+          <div style={{ position: 'absolute', bottom: '-220px', left: '-140px', width: '520px', height: '520px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(127,119,221,0.40), transparent 65%)' }} />
+        </div>
 
-        <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: 'minmax(0,1fr) auto', gap: '40px', alignItems: 'center' }}>
-          <div style={{ minWidth: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
-              <div style={{
-                display: 'inline-flex', alignItems: 'center', gap: '8px',
-                padding: '6px 12px',
-                background: 'rgba(255,255,255,0.08)',
-                border: '1px solid rgba(255,255,255,0.14)',
-                borderRadius: '999px',
-                fontSize: '10.5px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase',
-                backdropFilter: 'blur(8px)',
-              }}>
-                <span style={{ position: 'relative', width: '7px', height: '7px' }}>
-                  <span style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: '#9FE1CB' }} />
-                  <span style={{ position: 'absolute', inset: '-3px', borderRadius: '50%', background: '#9FE1CB', opacity: 0.4, animation: 'lp-pulse 2s ease-out infinite' }} />
-                </span>
-                Learning Intelligence
-              </div>
-              <div style={{
-                display: 'inline-flex', alignItems: 'center', gap: '6px',
-                padding: '6px 12px',
-                background: `${trend.color}22`,
-                border: `1px solid ${trend.color}55`,
-                borderRadius: '999px',
-                fontSize: '11px', fontWeight: 700, color: trend.color === '#BA7517' ? '#F5C97A' : trend.color,
-                letterSpacing: '0.04em',
-              }}>
-                <span style={{ fontSize: '13px', lineHeight: 1 }}>{trend.arrow}</span>
-                {trend.label}
-              </div>
-            </div>
+        {/* Glass surface */}
+        <div style={{
+          ...GLASS,
+          borderRadius: '30px',
+          padding: '44px 48px',
+          position: 'relative',
+        }}>
+          {/* subtle grid */}
+          <div aria-hidden style={{ position: 'absolute', inset: 0, borderRadius: '30px', overflow: 'hidden', pointerEvents: 'none', opacity: 0.06,
+            backgroundImage: 'linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)',
+            backgroundSize: '48px 48px', maskImage: 'radial-gradient(ellipse at center, black 30%, transparent 75%)' }} />
 
-            <div style={{ fontSize: '13px', fontWeight: 600, color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', letterSpacing: '0.16em', marginBottom: '8px' }}>
-              Learning Score
-            </div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '16px', flexWrap: 'wrap', marginBottom: '10px' }}>
-              <span style={{
-                fontSize: '7rem', fontWeight: 700, lineHeight: 0.9, letterSpacing: '-4px',
-                background: 'linear-gradient(135deg, #ffffff 0%, #9FE1CB 60%, #7F77DD 100%)',
-                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-                textShadow: '0 0 60px rgba(159,225,203,0.25)',
-              }}>
-                {learningScore}
-              </span>
-              <span style={{ fontSize: '14px', opacity: 0.55, fontWeight: 500, letterSpacing: '0.04em' }}>/ 100</span>
-            </div>
-            <div style={{ fontSize: '22px', fontWeight: 600, letterSpacing: '-0.4px', marginBottom: '28px', background: 'linear-gradient(90deg, #fff, rgba(255,255,255,0.7))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-              {heroStatus}
-            </div>
-
-            <div style={{ display: 'flex', gap: '28px', flexWrap: 'wrap' }}>
-              {[
-                { l: 'Mastery',   v: `${mastPct}%`,      sub: `${mastered}/${total}` },
-                { l: 'Practiced', v: `${practicedPct}%`,  sub: `${mastered + learning} cards` },
-                { l: 'Decks',     v: decks.length,        sub: `${total} total` },
-              ].map((s, i) => (
-                <div key={s.l} style={{ display: 'flex', gap: '28px' }}>
-                  {i > 0 && <div style={{ width: '1px', background: 'linear-gradient(180deg, transparent, rgba(255,255,255,0.18), transparent)' }} />}
-                  <div>
-                    <div style={{ fontSize: '10.5px', fontWeight: 700, opacity: 0.55, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '6px' }}>{s.l}</div>
-                    <div style={{ fontSize: '24px', fontWeight: 700, letterSpacing: '-0.6px', lineHeight: 1 }}>{s.v}</div>
-                    <div style={{ fontSize: '11px', opacity: 0.5, marginTop: '4px' }}>{s.sub}</div>
-                  </div>
+          <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: 'minmax(0,1fr) auto', gap: '40px', alignItems: 'center' }}>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
+                <div style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '8px',
+                  padding: '6px 12px',
+                  background: 'rgba(255,255,255,0.08)',
+                  border: '1px solid rgba(255,255,255,0.14)',
+                  borderRadius: '999px',
+                  fontSize: '10.5px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase',
+                  color: 'rgba(255,255,255,0.85)',
+                  backdropFilter: 'blur(8px)',
+                }}>
+                  <span style={{ position: 'relative', width: '7px', height: '7px' }}>
+                    <span style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: '#9FE1CB' }} />
+                    <span style={{ position: 'absolute', inset: '-3px', borderRadius: '50%', background: '#9FE1CB', opacity: 0.4, animation: 'lp-pulse 2s ease-out infinite' }} />
+                  </span>
+                  Learning Intelligence
                 </div>
-              ))}
-            </div>
-          </div>
+                <div style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '6px',
+                  padding: '6px 12px',
+                  background: `${trend.color}22`,
+                  border: `1px solid ${trend.color}55`,
+                  borderRadius: '999px',
+                  fontSize: '11px', fontWeight: 700,
+                  color: trend.color === '#BA7517' ? '#F5C97A' : trend.color,
+                  letterSpacing: '0.04em',
+                }}>
+                  <span style={{ fontSize: '13px', lineHeight: 1 }}>{trend.arrow}</span>
+                  {trend.label}
+                </div>
+              </div>
 
-          <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            <div aria-hidden style={{ position: 'absolute', inset: '-30px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(159,225,203,0.25), transparent 70%)', filter: 'blur(8px)' }} />
-            <Ring pct={mastPct} color="#9FE1CB" size={210} strokeWidth={12} trackColor="rgba(255,255,255,0.10)" glow showLabel={false} />
-            <div style={{ position: 'absolute', textAlign: 'center' }}>
-              <div style={{ fontSize: '46px', fontWeight: 700, letterSpacing: '-1.5px', lineHeight: 1, color: '#fff' }}>{mastPct}%</div>
-              <div style={{ fontSize: '10.5px', fontWeight: 700, opacity: 0.6, textTransform: 'uppercase', letterSpacing: '0.16em', marginTop: '6px' }}>Mastery</div>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', letterSpacing: '0.16em', marginBottom: '8px' }}>
+                Learning Score
+              </div>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '16px', flexWrap: 'wrap', marginBottom: '10px' }}>
+                <span style={{
+                  fontSize: '7rem', fontWeight: 700, lineHeight: 0.9, letterSpacing: '-4px',
+                  background: 'linear-gradient(135deg, #ffffff 0%, #9FE1CB 60%, #7F77DD 100%)',
+                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+                }}>
+                  {learningScore}
+                </span>
+                <span style={{ fontSize: '14px', opacity: 0.55, fontWeight: 500, letterSpacing: '0.04em', color: '#fff' }}>/ 100</span>
+              </div>
+              <div style={{ fontSize: '22px', fontWeight: 600, letterSpacing: '-0.4px', marginBottom: '28px', background: 'linear-gradient(90deg, #fff, rgba(255,255,255,0.7))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                {heroStatus}
+              </div>
+
+              <div style={{ display: 'flex', gap: '28px', flexWrap: 'wrap' }}>
+                {[
+                  { l: 'Mastery',   v: `${mastPct}%`,      sub: `${mastered}/${total}` },
+                  { l: 'Practiced', v: `${practicedPct}%`,  sub: `${mastered + learning} cards` },
+                  { l: 'Decks',     v: decks.length,        sub: `${total} total` },
+                ].map((s, i) => (
+                  <div key={s.l} style={{ display: 'flex', gap: '28px' }}>
+                    {i > 0 && <div style={{ width: '1px', background: 'linear-gradient(180deg, transparent, rgba(255,255,255,0.18), transparent)' }} />}
+                    <div>
+                      <div style={{ fontSize: '10.5px', fontWeight: 700, opacity: 0.55, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '6px', color: '#fff' }}>{s.l}</div>
+                      <div style={{ fontSize: '24px', fontWeight: 700, letterSpacing: '-0.6px', lineHeight: 1, color: '#fff' }}>{s.v}</div>
+                      <div style={{ fontSize: '11px', opacity: 0.5, marginTop: '4px', color: '#fff' }}>{s.sub}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              <div aria-hidden style={{ position: 'absolute', inset: '-30px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(159,225,203,0.25), transparent 70%)' }} />
+              <Ring pct={mastPct} color="#9FE1CB" size={210} strokeWidth={12} trackColor="rgba(255,255,255,0.10)" glow showLabel={false} />
+              <div style={{ position: 'absolute', textAlign: 'center' }}>
+                <div style={{ fontSize: '46px', fontWeight: 700, letterSpacing: '-1.5px', lineHeight: 1, color: '#fff' }}>{mastPct}%</div>
+                <div style={{ fontSize: '10.5px', fontWeight: 700, opacity: 0.6, textTransform: 'uppercase', letterSpacing: '0.16em', marginTop: '6px', color: '#fff' }}>Mastery</div>
+              </div>
             </div>
           </div>
         </div>
@@ -422,7 +432,7 @@ export default function Dashboard({ decks }: { decks: Deck[] }) {
 
         <div style={{ padding: '24px 28px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
           <div>
-            <Eyebrow dot="#7F77DD">Learning Intelligence</Eyebrow>
+            <Eyebrow>Learning Intelligence</Eyebrow>
             <h3 style={{ margin: '6px 0 2px', fontSize: '20px', fontWeight: 700, letterSpacing: '-0.5px', color: '#0f0f1a' }}>
               Today's snapshot
             </h3>
@@ -562,7 +572,7 @@ export default function Dashboard({ decks }: { decks: Deck[] }) {
                 flexShrink: 0,
               }}>{primaryInsight.icon}</div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <Eyebrow dot="#7F77DD">Primary Insight</Eyebrow>
+                <Eyebrow>Primary Insight</Eyebrow>
                 <div style={{ fontSize: '20px', fontWeight: 700, letterSpacing: '-0.4px', color: '#0f0f1a', marginTop: '8px', marginBottom: '6px', lineHeight: 1.3 }}>
                   {primaryInsight.title}
                 </div>
@@ -683,65 +693,79 @@ export default function Dashboard({ decks }: { decks: Deck[] }) {
         </div>
       </section>
 
-      {/* ═════════════════════════ LEARNING COACH ═════════════════════════ */}
+      {/* ═════════════════════════ COACH — iOS 26 glass ═════════════════════════ */}
       <section style={{
         position: 'relative',
-        background: 'linear-gradient(135deg, #1B1742 0%, #2E2670 100%)',
         borderRadius: '24px',
+        overflow: 'hidden',
+        background: 'linear-gradient(140deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
         padding: '2px',
         boxShadow: '0 20px 60px rgba(27,23,66,0.30)',
       }}>
-        {/* inner card */}
+        {/* Ambient blobs */}
+        <div aria-hidden style={{ position: 'absolute', inset: 0, borderRadius: '24px', overflow: 'hidden', pointerEvents: 'none' }}>
+          <div style={{ position: 'absolute', top: '-40px', right: '-30px', width: '200px', height: '200px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(127,119,221,0.35), transparent 65%)' }} />
+          <div style={{ position: 'absolute', bottom: '-60px', left: '-40px', width: '240px', height: '240px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(159,225,203,0.20), transparent 65%)' }} />
+        </div>
+
+        {/* Glass surface */}
         <div style={{
-          position: 'relative',
-          background: 'linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,248,255,0.96))',
+          ...GLASS,
           borderRadius: '22px',
           padding: '24px 28px',
-          overflow: 'hidden',
+          position: 'relative',
         }}>
-          <div aria-hidden style={{ position: 'absolute', top: '-60px', right: '-40px', width: '220px', height: '220px', background: 'radial-gradient(circle, rgba(127,119,221,0.18), transparent 70%)' }} />
-          <div aria-hidden style={{ position: 'absolute', bottom: '-80px', left: '40%', width: '260px', height: '260px', background: 'radial-gradient(circle, rgba(159,225,203,0.14), transparent 70%)' }} />
-
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-start', gap: '18px' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '18px' }}>
             <div style={{
-              width: '56px', height: '56px', borderRadius: '16px',
-              background: 'linear-gradient(135deg, #534AB7, #7F77DD)',
+              width: '48px', height: '48px', borderRadius: '14px',
+              background: 'rgba(255,255,255,0.15)',
+              border: '1px solid rgba(255,255,255,0.30)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '26px',
-              boxShadow: '0 12px 28px rgba(83,74,183,0.40), 0 0 0 1px rgba(255,255,255,0.20) inset',
               flexShrink: 0,
-            }}>🤖</div>
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.25)',
+            }}>
+              <svg width="20" height="20" fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth="1.6"
+                strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                <path d="M12 2a7 7 0 017 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 01-1 1H9a1 1 0 01-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 017-7z" />
+                <path d="M9 21h6M10 17v4M14 17v4" />
+              </svg>
+            </div>
 
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '8px' }}>
                 <span style={{
                   fontSize: '10px', fontWeight: 700,
                   padding: '4px 9px', borderRadius: '6px',
-                  background: `${coach.color}18`,
-                  color: coach.color,
-                  border: `1px solid ${coach.color}44`,
+                  background: `${coach.color}30`,
+                  color: coach.color === '#E24B4A' ? '#ff8a8a' : coach.color === '#BA7517' ? '#F5C97A' : coach.color === '#1D9E75' ? '#9FE1CB' : '#AFA9EC',
+                  border: `1px solid ${coach.color}55`,
                   textTransform: 'uppercase', letterSpacing: '0.1em',
                 }}>{coach.priority}</span>
-                <span style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(15,15,26,0.4)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                <span style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                   Learning Coach
                 </span>
-                <span style={{ width: '3px', height: '3px', borderRadius: '50%', background: 'rgba(15,15,26,0.25)' }} />
-                <span style={{ fontSize: '10px', fontWeight: 600, color: 'rgba(15,15,26,0.5)' }}>
-                  Confidence <strong style={{ color: coach.color }}>{coach.conf}%</strong>
+                <span style={{ width: '3px', height: '3px', borderRadius: '50%', background: 'rgba(255,255,255,0.25)' }} />
+                <span style={{ fontSize: '10px', fontWeight: 600, color: 'rgba(255,255,255,0.5)' }}>
+                  Confidence <strong style={{ color: 'rgba(255,255,255,0.85)' }}>{coach.conf}%</strong>
                 </span>
               </div>
-              <div style={{ fontSize: '17px', fontWeight: 700, color: '#0f0f1a', letterSpacing: '-0.3px', marginBottom: '6px' }}>
+              <div style={{ fontSize: '17px', fontWeight: 700, color: '#fff', letterSpacing: '-0.3px', marginBottom: '6px' }}>
                 {coach.type}
               </div>
-              <div style={{ fontSize: '14px', color: 'rgba(15,15,26,0.65)', lineHeight: 1.6 }}>
+              <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.65)', lineHeight: 1.6 }}>
                 {coach.text}
               </div>
 
               <div style={{ marginTop: '14px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <div style={{ flex: 1, maxWidth: '200px', height: '4px', background: 'rgba(15,15,26,0.06)', borderRadius: '999px', overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${coach.conf}%`, background: `linear-gradient(90deg, ${coach.color}, ${coach.color}aa)`, borderRadius: '999px', boxShadow: `0 0 10px ${coach.color}66`, transition: 'width 0.8s ease' }} />
+                <div style={{ flex: 1, maxWidth: '200px', height: '4px', background: 'rgba(255,255,255,0.10)', borderRadius: '999px', overflow: 'hidden' }}>
+                  <div style={{
+                    height: '100%', width: `${coach.conf}%`,
+                    background: `linear-gradient(90deg, rgba(255,255,255,0.7), rgba(255,255,255,0.4))`,
+                    borderRadius: '999px',
+                    transition: 'width 0.8s ease',
+                  }} />
                 </div>
-                <span style={{ fontSize: '10.5px', color: 'rgba(15,15,26,0.4)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>
+                <span style={{ fontSize: '10.5px', color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>
                   Signal strength
                 </span>
               </div>
