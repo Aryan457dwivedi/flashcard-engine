@@ -144,23 +144,6 @@ export default function Practice({
 
   const cometRef = useRef<HTMLDivElement>(null);
   const glareRef = useRef<HTMLDivElement>(null);
-  const ratingGroupRef     = useRef<HTMLDivElement>(null);
-  const ratingHighlightRef = useRef<HTMLDivElement>(null);
-
-  const onRgHover = (e: React.MouseEvent<HTMLButtonElement>) => {
-    const btn = e.currentTarget;
-    const hl  = ratingHighlightRef.current;
-    if (!hl) return;
-    hl.style.opacity    = '1';
-    hl.style.width      = `${btn.offsetWidth}px`;
-    hl.style.height     = `${btn.offsetHeight}px`;
-    hl.style.transform  = `translateX(${btn.offsetLeft}px)`;
-  };
-  const onRgLeave = () => {
-    const hl = ratingHighlightRef.current;
-    if (!hl) return;
-    hl.style.opacity = '0';
-  };
 
   useEffect(() => {
     setCards(initCards(deck.cards));
@@ -388,16 +371,13 @@ export default function Practice({
 
         {/* Rating buttons — single pill row */}
         <div className={`rating-row${flipped ? ' visible' : ''}`}>
-          <div className="rating-group" ref={ratingGroupRef}>
-            <div className="rg-highlight" ref={ratingHighlightRef}/>
+          <div className="rating-group">
             {[
               { q: 1, label: 'Missed',  icon: '✕', cls: 'rg-miss'  },
               { q: 3, label: 'Shaky',   icon: '~', cls: 'rg-shaky' },
               { q: 5, label: 'Got it!', icon: '✓', cls: 'rg-got'   },
             ].map(({ q, label, icon, cls }, i, arr) => (
               <button key={q} className={`rg-btn ${cls}`}
-                onMouseEnter={onRgHover}
-                onMouseLeave={onRgLeave}
                 onClick={e => { e.stopPropagation(); answer(q); }}>
                 <span className="rg-icon">{icon}</span>
                 <span className="rg-label">{label}</span>
@@ -691,43 +671,27 @@ kbd {
     inset 0 1px 0 rgba(255,255,255,0.95);
   backdrop-filter: blur(20px) saturate(1.5);
   -webkit-backdrop-filter: blur(20px) saturate(1.5);
-  overflow: visible;
+  overflow: hidden;
   position: relative;
-  transition: border-color 0.22s ease, box-shadow 0.22s ease;
+  transition: box-shadow 0.22s ease, border-color 0.22s ease;
 }
-/* outer glow on any button hover — driven by JS highlight presence */
-.rating-group:has(.rg-highlight[style*="opacity: 1"]),
-.rating-group:has(.rg-btn:hover) {
+.rating-group:hover {
   border-color: rgba(127,119,221,0.45);
   box-shadow:
     0 0 0 4px rgba(127,119,221,0.12),
     0 4px 20px rgba(100,90,200,0.14),
     inset 0 1px 0 rgba(255,255,255,0.95);
 }
-
-/* sliding highlight pill — clipped to inside the group */
-.rg-highlight {
-  position: absolute;
-  top: 0; left: 0;
-  border-radius: 23px;
-  background: rgba(127,119,221,0.09);
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.18s ease, transform 0.22s cubic-bezier(0.22,1,0.36,1), width 0.22s cubic-bezier(0.22,1,0.36,1);
-  z-index: 0;
-}
-
-/* shine sweep */
+/* shine sweep on hover */
 .rating-group::after {
   content: '';
-  position: absolute; top: -60%; left: -75%;
+  position: absolute;
+  top: -60%; left: -75%;
   width: 50%; height: 220%;
-  background: linear-gradient(105deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.48) 50%, rgba(255,255,255,0) 100%);
+  background: linear-gradient(105deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.52) 50%, rgba(255,255,255,0) 100%);
   transform: skewX(-18deg) translateX(0);
   opacity: 0; pointer-events: none;
-  border-radius: 0;
-  transition: opacity 0.15s, transform 0.5s cubic-bezier(0.22,1,0.36,1);
-  z-index: 2;
+  transition: opacity 0.15s, transform 0.45s cubic-bezier(0.22,1,0.36,1);
 }
 .rating-group:hover::after { opacity: 1; transform: skewX(-18deg) translateX(460%); }
 
@@ -736,12 +700,12 @@ kbd {
   padding: 16px 28px;
   background: transparent; border: none;
   cursor: pointer; font-family: 'DM Sans', sans-serif;
+  transition: background 0.15s;
   -webkit-tap-highlight-color: transparent;
   z-index: 1;
-  border-radius: 23px;
 }
-/* no background change on btn hover — handled by sliding highlight */
-.rg-btn:active { background: rgba(127,119,221,0.10); }
+.rg-btn:hover { background: rgba(127,119,221,0.07); }
+.rg-btn:active { background: rgba(127,119,221,0.13); }
 
 .rg-icon { font-size: 15px; font-family: monospace; font-weight: 700; line-height: 1; }
 .rg-miss  .rg-icon { color: #A32D2D; }
