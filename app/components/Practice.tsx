@@ -110,6 +110,20 @@ function attachCometTilt(wrap: HTMLElement, glare: HTMLElement, ROTATE = 15, TRA
   };
 }
 
+const BTNS = [
+  { q:1, label:'Missed',  icon:'✕', cls:'rg-miss'  },
+  { q:3, label:'Shaky',   icon:'~', cls:'rg-shaky' },
+  { q:5, label:'Got it!', icon:'✓', cls:'rg-got'   },
+];
+
+const RING_TRANSITION = [
+  'opacity 0.18s ease',
+  'left 0.22s cubic-bezier(0.22,1,0.36,1)',
+  'top 0.22s cubic-bezier(0.22,1,0.36,1)',
+  'width 0.22s cubic-bezier(0.22,1,0.36,1)',
+  'height 0.22s cubic-bezier(0.22,1,0.36,1)',
+].join(',');
+
 export default function Practice({
   deck,
   onFinish,
@@ -136,13 +150,14 @@ export default function Practice({
   const [streakFlash, setStreakFlash]        = useState(false);
   const [showKeyHint, setShowKeyHint]        = useState(true);
 
-  /* highlight pill state — tracks which button is hovered */
-  const [hlStyle, setHlStyle] = useState<{
-    opacity: number; left: number; width: number; height: number;
-  }>({ opacity: 0, left: 0, width: 0, height: 0 });
+  /* Ring state — position relative to the outer padding wrapper */
+  const [ring, setRing] = useState<{
+    opacity: number; left: number; top: number; width: number; height: number;
+  }>({ opacity: 0, left: 0, top: 0, width: 0, height: 0 });
 
-  const cometRef = useRef<HTMLDivElement>(null);
-  const glareRef = useRef<HTMLDivElement>(null);
+  const cometRef   = useRef<HTMLDivElement>(null);
+  const glareRef   = useRef<HTMLDivElement>(null);
+  const outerRef   = useRef<HTMLDivElement>(null); // padding wrapper — ring coords relative to this
 
   useEffect(() => {
     setCards(initCards(deck.cards));
@@ -205,6 +220,24 @@ export default function Practice({
     if (quality === 5) { setStreakFlash(true); setTimeout(() => setStreakFlash(false), 600); }
   };
 
+  const handleBtnEnter = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const btn   = e.currentTarget;
+    const outer = outerRef.current;
+    if (!outer) return;
+    const outerRect = outer.getBoundingClientRect();
+    const btnRect   = btn.getBoundingClientRect();
+    const GAP = 6;
+    setRing({
+      opacity: 1,
+      left:   btnRect.left - outerRect.left - GAP,
+      top:    btnRect.top  - outerRect.top  - GAP,
+      width:  btnRect.width  + GAP * 2,
+      height: btnRect.height + GAP * 2,
+    });
+  };
+
+  const handleGroupLeave = () => setRing(r => ({ ...r, opacity: 0 }));
+
   /* ── DONE SCREEN ─────────────────────────────────────────────── */
   if (done) {
     const score    = Math.round((session.correct / cards.length) * 100);
@@ -251,7 +284,8 @@ export default function Practice({
                 <span className="mastery-val">{val}</span>
                 <span className="mastery-label">{label}</span>
                 <div className="mastery-bar-track">
-                  <div className="mastery-bar-fill" style={{width:`${cards.length?(val/cards.length)*100:0}%`}}/>
+                  <div className="mastery-bar-fill"
+                    style={{width:`${cards.length?(val/cards.length)*100:0}%`}}/>
                 </div>
               </div>
             ))}
@@ -269,12 +303,6 @@ export default function Practice({
   }
 
   const pct = Math.round((current / cards.length) * 100);
-
-  const BTNS = [
-    { q:1, label:'Missed',  icon:'✕', cls:'rg-miss'  },
-    { q:3, label:'Shaky',   icon:'~', cls:'rg-shaky' },
-    { q:5, label:'Got it!', icon:'✓', cls:'rg-got'   },
-  ];
 
   return (
     <>
@@ -305,7 +333,7 @@ export default function Practice({
 
         {/* Streak */}
         {session.correct > 1 && (
-          <div style={{ display:'flex', justifyContent:'center', marginBottom:'22px' }}>
+          <div style={{display:'flex',justifyContent:'center',marginBottom:'22px'}}>
             <div key={session.correct} className={`streak-bar${streakFlash?' flash':''}`}>
               {session.correct} correct in a row!
             </div>
@@ -343,51 +371,56 @@ export default function Practice({
           </div>
         </div>
 
-        {/* Rating buttons — centred, smooth highlight pill */}
+        {/* Rating buttons */}
         <div className={`rating-row${flipped?' visible':''}`}>
+          {/*
+            outerRef = the padding wrapper.
+            Ring coords are measured relative to this element,
+            so the ring floats outside the pill border (like PillNav).
+          */}
           <div
-            className="rating-group"
-            onMouseLeave={() => setHlStyle(s => ({ ...s, opacity: 0 }))}
+            ref={outerRef}
+            style={{ position:'relative', padding:'8px', cursor:'default' }}
+            onMouseLeave={handleGroupLeave}
           >
-            {/* sliding highlight pill */}
+            {/* Outer ring — lives in padding wrapper, escapes the pill */}
             <div
-              className="rg-highlight"
               style={{
-                opacity:   hlStyle.opacity,
-                width:     hlStyle.width,
-                height:    hlStyle.height,
-                transform: `translateX(${hlStyle.left}px)`,
+                position:     'absolute',
+                borderRadius: '32px',
+                border:       '1.5px solid rgba(127,119,221,0.60)',
+                pointerEvents:'none',
+                zIndex:       20,
+                opacity:      ring.opacity,
+                left:         ring.left  + 'px',
+                top:          ring.top   + 'px',
+                width:        ring.width + 'px',
+                height:       ring.height+ 'px',
+                transition:   RING_TRANSITION,
               }}
             />
-            {BTNS.map(({ q, label, icon, cls }, i) => (
-              <button
-                key={q}
-                className={`rg-btn ${cls}`}
-                onMouseEnter={e => {
-                  const btn = e.currentTarget;
-                  const group = btn.parentElement!;
-                  const groupRect = group.getBoundingClientRect();
-                  const btnRect   = btn.getBoundingClientRect();
-                  setHlStyle({
-                    opacity: 1,
-                    left:   btnRect.left - groupRect.left,
-                    width:  btnRect.width,
-                    height: btnRect.height,
-                  });
-                }}
-                onClick={e => { e.stopPropagation(); answer(q); }}
-              >
-                <span className="rg-icon">{icon}</span>
-                <span className="rg-label">{label}</span>
-                {i < BTNS.length - 1 && <span className="rg-divider"/>}
-              </button>
-            ))}
+
+            {/* Pill */}
+            <div className="rating-group">
+              {BTNS.map(({ q, label, icon, cls }, i) => (
+                <button
+                  key={q}
+                  className={`rg-btn ${cls}`}
+                  onMouseEnter={handleBtnEnter}
+                  onClick={e => { e.stopPropagation(); answer(q); }}
+                >
+                  <span className="rg-icon">{icon}</span>
+                  <span className="rg-label">{label}</span>
+                  {i < BTNS.length - 1 && <span className="rg-divider"/>}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Space hint — centred */}
+        {/* Space hint */}
         {!flipped && showKeyHint && (
-          <div style={{ display:'flex', justifyContent:'center', marginTop:'14px' }}>
+          <div style={{display:'flex',justifyContent:'center',marginTop:'14px'}}>
             <p className="bottom-kb-hint">
               Press <kbd>Space</kbd> to flip the card
             </p>
@@ -404,37 +437,35 @@ const STYLES = `
 
 @keyframes confetti-fly {
   0%   { transform: translate(0,0) rotate(0deg) scale(1); opacity:1; }
-  100% { transform: translate(var(--dx), var(--dy)) rotate(480deg) scale(0.3); opacity:0; }
+  100% { transform: translate(var(--dx),var(--dy)) rotate(480deg) scale(0.3); opacity:0; }
 }
 @keyframes card-in {
-  from { opacity:0; transform: translateY(28px) scale(0.95); }
-  to   { opacity:1; transform: translateY(0) scale(1); }
+  from { opacity:0; transform:translateY(28px) scale(0.95); }
+  to   { opacity:1; transform:translateY(0) scale(1); }
 }
 @keyframes card-out-right {
-  from { opacity:1; transform: translateX(0) rotate(0deg); }
-  to   { opacity:0; transform: translateX(110px) rotate(6deg); }
+  from { opacity:1; transform:translateX(0) rotate(0deg); }
+  to   { opacity:0; transform:translateX(110px) rotate(6deg); }
 }
 @keyframes card-out-left {
-  from { opacity:1; transform: translateX(0) rotate(0deg); }
-  to   { opacity:0; transform: translateX(-110px) rotate(-6deg); }
+  from { opacity:1; transform:translateX(0) rotate(0deg); }
+  to   { opacity:0; transform:translateX(-110px) rotate(-6deg); }
 }
 @keyframes face-appear {
-  from { opacity:0; transform: translateY(8px); }
-  to   { opacity:1; transform: translateY(0); }
+  from { opacity:0; transform:translateY(8px); }
+  to   { opacity:1; transform:translateY(0); }
 }
 @keyframes streak-in {
-  0%   { opacity:0; transform:translateY(-6px); }
-  100% { opacity:1; transform:translateY(0); }
+  from { opacity:0; transform:translateY(-6px); }
+  to   { opacity:1; transform:translateY(0); }
 }
 
 :root {
-  --brand: #7F77DD;
-  --brand-dark: #534AB7;
+  --brand:       #7F77DD;
+  --brand-dark:  #534AB7;
   --brand-light: #EEEDFE;
-  --green: #1D9E75;
-  --red: #E24B4A;
-  --glass-blur: blur(28px) saturate(1.7);
-  --text-primary: #0f0f1a;
+  --glass-blur:  blur(28px) saturate(1.7);
+  --text-primary:   #0f0f1a;
   --text-secondary: rgba(15,15,26,0.46);
   --radius-card: 28px;
 }
@@ -446,219 +477,190 @@ const STYLES = `
   font-family: 'DM Sans', sans-serif;
 }
 
-/* Header */
+/* ── Header ── */
 .practice-header {
-  display: flex; align-items: center;
-  justify-content: space-between;
-  margin-bottom: 22px;
+  display:flex; align-items:center;
+  justify-content:space-between;
+  margin-bottom:22px;
 }
 .exit-btn {
-  display: flex; align-items: center; gap: 6px;
-  background: rgba(255,255,255,0.45);
-  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(255,255,255,0.65);
-  color: var(--text-secondary);
-  font-family: 'DM Sans', sans-serif;
-  font-size: 13px; font-weight: 500;
-  cursor: pointer; padding: 7px 14px; border-radius: 12px;
-  transition: background 0.15s, color 0.15s, transform 0.15s;
-  box-shadow: 0 2px 8px rgba(100,90,200,0.07);
+  display:flex; align-items:center; gap:6px;
+  background:rgba(255,255,255,0.45);
+  backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+  border:1px solid rgba(255,255,255,0.65);
+  color:var(--text-secondary);
+  font-family:'DM Sans',sans-serif; font-size:13px; font-weight:500;
+  cursor:pointer; padding:7px 14px; border-radius:12px;
+  transition:background 0.15s, color 0.15s, transform 0.15s;
+  box-shadow:0 2px 8px rgba(100,90,200,0.07);
 }
-.exit-btn:hover { background: rgba(255,255,255,0.65); color: var(--brand-dark); transform: translateY(-1px); }
-.deck-name {
-  font-size: 13px; font-weight: 600; color: #0f0f1a;
-  letter-spacing: 0.01em; max-width: 200px;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-.counter-badge { display: flex; align-items: baseline; gap: 2px; font-family: 'Fraunces', Georgia, serif; }
-.counter-current { font-size: 20px; font-weight: 700; color: var(--text-primary); }
-.counter-sep { font-size: 14px; color: rgba(15,15,26,0.20); margin: 0 2px; }
-.counter-total { font-size: 14px; font-weight: 400; color: var(--text-secondary); }
+.exit-btn:hover { background:rgba(255,255,255,0.65); color:var(--brand-dark); transform:translateY(-1px); }
 
-/* Progress */
+.deck-name {
+  font-size:13px; font-weight:600; color:#0f0f1a;
+  letter-spacing:0.01em; max-width:200px;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.counter-badge { display:flex; align-items:baseline; gap:2px; font-family:'Fraunces',Georgia,serif; }
+.counter-current { font-size:20px; font-weight:700; color:var(--text-primary); }
+.counter-sep     { font-size:14px; color:rgba(15,15,26,0.20); margin:0 2px; }
+.counter-total   { font-size:14px; font-weight:400; color:var(--text-secondary); }
+
+/* ── Progress ── */
 .progress-track {
-  position: relative; height: 5px;
-  background: rgba(15,15,26,0.08);
-  border-radius: 999px; margin-bottom: 18px;
+  position:relative; height:5px;
+  background:rgba(15,15,26,0.08);
+  border-radius:999px; margin-bottom:18px;
 }
 .progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #7F77DD 0%, #AFA9EC 100%);
-  border-radius: 999px;
-  transition: width 0.55s cubic-bezier(0.4,0,0.2,1);
+  height:100%;
+  background:linear-gradient(90deg,#7F77DD 0%,#AFA9EC 100%);
+  border-radius:999px;
+  transition:width 0.55s cubic-bezier(0.4,0,0.2,1);
 }
 
-/* Streak */
+/* ── Streak ── */
 .streak-bar {
-  display: inline-flex; align-items: center;
-  font-size: 12.5px; font-weight: 600;
-  color: var(--brand-dark);
-  background: rgba(127,119,221,0.10);
-  border: 1px solid rgba(127,119,221,0.25);
-  border-radius: 999px; padding: 5px 14px;
-  animation: streak-in 0.35s cubic-bezier(0.22,1,0.36,1) forwards;
+  display:inline-flex; align-items:center;
+  font-size:12.5px; font-weight:600;
+  color:var(--brand-dark);
+  background:rgba(127,119,221,0.10);
+  border:1px solid rgba(127,119,221,0.25);
+  border-radius:999px; padding:5px 14px;
+  animation:streak-in 0.35s cubic-bezier(0.22,1,0.36,1) forwards;
 }
 
-/* Card stack */
+/* ── Card stack ── */
 .stack-wrap {
-  position: relative;
-  margin-bottom: 28px;
-  perspective: 1000px;
+  position:relative; margin-bottom:28px; perspective:1000px;
 }
 .comet-wrap {
-  position: relative; z-index: 2;
-  border-radius: var(--radius-card);
-  will-change: transform; transform-style: preserve-3d;
-  box-shadow: 0 2px 8px rgba(100,90,200,0.06), 0 8px 24px rgba(100,90,200,0.08);
-  transition: box-shadow 0.3s ease;
+  position:relative; z-index:2;
+  border-radius:var(--radius-card);
+  will-change:transform; transform-style:preserve-3d;
+  box-shadow:0 2px 8px rgba(100,90,200,0.06),0 8px 24px rgba(100,90,200,0.08);
+  transition:box-shadow 0.3s ease;
 }
 .comet-wrap:hover {
-  box-shadow: 0 4px 16px rgba(100,90,200,0.10), 0 16px 40px rgba(100,90,200,0.12);
+  box-shadow:0 4px 16px rgba(100,90,200,0.10),0 16px 40px rgba(100,90,200,0.12);
 }
 .card-glare {
-  pointer-events: none; position: absolute; inset: 0; z-index: 20;
-  border-radius: var(--radius-card);
-  mix-blend-mode: overlay; opacity: 0.55;
+  pointer-events:none; position:absolute; inset:0; z-index:20;
+  border-radius:var(--radius-card);
+  mix-blend-mode:overlay; opacity:0.55;
 }
 .card-shell {
-  position: relative; min-height: 300px; height: 300px;
-  border-radius: var(--radius-card);
-  cursor: pointer; overflow: hidden;
-  background: linear-gradient(135deg, rgba(255,255,255,0.88) 0%, rgba(245,244,255,0.78) 40%, rgba(250,250,255,0.84) 100%);
-  backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid rgba(255,255,255,0.80);
+  position:relative; min-height:300px; height:300px;
+  border-radius:var(--radius-card);
+  cursor:pointer; overflow:hidden;
+  background:linear-gradient(135deg,rgba(255,255,255,0.88) 0%,rgba(245,244,255,0.78) 40%,rgba(250,250,255,0.84) 100%);
+  backdrop-filter:var(--glass-blur); -webkit-backdrop-filter:var(--glass-blur);
+  border:1px solid rgba(255,255,255,0.80);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.95),
     inset 0 -1px 0 rgba(200,196,240,0.20),
     0 4px 20px rgba(80,70,180,0.13),
     0 1px 4px rgba(0,0,0,0.06);
-  outline: none; -webkit-tap-highlight-color: transparent;
-  transform-style: preserve-3d;
+  outline:none; -webkit-tap-highlight-color:transparent;
+  transform-style:preserve-3d;
 }
-.card-shell:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
-.card-shell.anim-in        { animation: card-in        0.36s cubic-bezier(0.22,1,0.36,1) forwards; }
-.card-shell.anim-out-right { animation: card-out-right 0.26s ease-in forwards; }
-.card-shell.anim-out-left  { animation: card-out-left  0.26s ease-in forwards; }
+.card-shell:focus-visible { outline:2px solid var(--brand); outline-offset:3px; }
+.card-shell.anim-in        { animation:card-in        0.36s cubic-bezier(0.22,1,0.36,1) forwards; }
+.card-shell.anim-out-right { animation:card-out-right 0.26s ease-in forwards; }
+.card-shell.anim-out-left  { animation:card-out-left  0.26s ease-in forwards; }
 
+/* ── Card faces ── */
 .card-face {
-  position: absolute; inset: 0;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  padding: 48px 52px 52px; text-align: center;
+  position:absolute; inset:0;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  padding:48px 52px 52px; text-align:center;
 }
-.face-back { animation: face-appear 0.22s ease forwards; }
+.face-back { animation:face-appear 0.22s ease forwards; }
 .card-side-label {
-  position: absolute; top: 20px; left: 24px;
-  font-size: 11px; font-weight: 700;
-  letter-spacing: 0.10em; text-transform: uppercase; color: #0f0f1a;
+  position:absolute; top:20px; left:24px;
+  font-size:11px; font-weight:700;
+  letter-spacing:0.10em; text-transform:uppercase; color:#0f0f1a;
 }
 .card-text {
-  font-family: 'DM Sans', sans-serif;
-  font-size: 1.45rem; font-weight: 400;
-  line-height: 1.75; color: var(--text-primary);
-  max-width: 460px; letter-spacing: -0.012em;
+  font-family:'DM Sans',sans-serif;
+  font-size:1.45rem; font-weight:400;
+  line-height:1.75; color:var(--text-primary);
+  max-width:460px; letter-spacing:-0.012em;
 }
-.answer-text { color: #0f1a14; }
+.answer-text { color:#0f1a14; }
 .card-bottom-hint {
-  position: absolute; bottom: 20px; left: 0; right: 0;
-  display: flex; align-items: center; justify-content: center; gap: 12px;
+  position:absolute; bottom:20px; left:0; right:0;
+  display:flex; align-items:center; justify-content:center; gap:12px;
 }
-.tap-hint { font-size: 12px; color: var(--text-secondary); display: none; }
-@media (hover: none) { .tap-hint { display: inline; } .kbd-hint { display: none; } }
-.kbd-hint { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-secondary); }
+.tap-hint  { font-size:12px; color:var(--text-secondary); display:none; }
+.kbd-hint  { display:flex; align-items:center; gap:4px; font-size:12px; color:var(--text-secondary); }
+@media (hover:none) { .tap-hint { display:inline; } .kbd-hint { display:none; } }
 kbd {
-  display: inline-flex; align-items: center; justify-content: center;
-  background: rgba(255,255,255,0.75);
-  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(15,15,26,0.13); border-bottom-width: 2px;
-  border-radius: 6px; padding: 1px 8px;
-  font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 600;
-  color: var(--text-secondary);
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05); line-height: 1.7;
+  display:inline-flex; align-items:center; justify-content:center;
+  background:rgba(255,255,255,0.75);
+  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+  border:1px solid rgba(15,15,26,0.13); border-bottom-width:2px;
+  border-radius:6px; padding:1px 8px;
+  font-family:'DM Sans',sans-serif; font-size:11px; font-weight:600;
+  color:var(--text-secondary);
+  box-shadow:0 1px 2px rgba(0,0,0,0.05); line-height:1.7;
 }
 
-/* ── Rating row — always centred ── */
+/* ── Rating row ── */
 .rating-row {
-  display: flex;
-  justify-content: center;
-  opacity: 0; transform: translateY(14px);
-  pointer-events: none;
-  transition: opacity 0.26s ease, transform 0.26s ease;
+  display:flex; justify-content:center;
+  opacity:0; transform:translateY(14px);
+  pointer-events:none;
+  transition:opacity 0.26s ease, transform 0.26s ease;
 }
 .rating-row.visible { opacity:1; transform:translateY(0); pointer-events:all; }
 
-/* ── Rating pill container ── */
+/* Pill — no overflow:hidden so ring can escape outside */
 .rating-group {
-  position: relative;
-  display: inline-flex; align-items: stretch;
-  background: rgba(255,255,255,0.82);
-  border: 1px solid rgba(220,218,240,0.80);
-  border-radius: 24px;
+  display:inline-flex; align-items:stretch;
+  background:rgba(255,255,255,0.82);
+  border:1px solid rgba(220,218,240,0.80);
+  border-radius:24px;
   box-shadow:
     0 2px 10px rgba(100,90,200,0.10),
     inset 0 1px 0 rgba(255,255,255,0.95);
-  backdrop-filter: blur(20px) saturate(1.5);
-  -webkit-backdrop-filter: blur(20px) saturate(1.5);
-  overflow: hidden;   /* keeps highlight clipped inside pill */
-  transition: border-color 0.22s, box-shadow 0.22s;
-}
-/* outer ring only appears on the GROUP border — never inside */
-.rating-group:hover {
-  border-color: rgba(127,119,221,0.45);
-  box-shadow:
-    0 0 0 4px rgba(127,119,221,0.10),
-    0 4px 20px rgba(100,90,200,0.14),
-    inset 0 1px 0 rgba(255,255,255,0.95);
+  backdrop-filter:blur(20px) saturate(1.5);
+  -webkit-backdrop-filter:blur(20px) saturate(1.5);
+  /* NO overflow:hidden — ring must escape the pill border */
 }
 
-/* sliding pill — positioned absolutely inside the group */
-.rg-highlight {
-  position: absolute;
-  top: 0; left: 0;
-  height: 100%;           /* full height of pill */
-  border-radius: 23px;
-  background: rgba(127,119,221,0.11);
-  pointer-events: none;
-  opacity: 0;
-  /* smooth slide & fade */
-  transition:
-    opacity   0.18s ease,
-    transform 0.20s cubic-bezier(0.22,1,0.36,1),
-    width     0.20s cubic-bezier(0.22,1,0.36,1);
-  z-index: 0;
-}
-
+/* Individual buttons — no hover bg, ring handles it */
 .rg-btn {
-  position: relative; z-index: 1;
-  display: flex; align-items: center; gap: 8px;
-  padding: 16px 28px;
-  background: transparent; border: none;
-  cursor: pointer; font-family: 'DM Sans', sans-serif;
-  -webkit-tap-highlight-color: transparent;
-  /* no individual hover bg — handled entirely by sliding pill */
+  position:relative; z-index:1;
+  display:flex; align-items:center; gap:8px;
+  padding:16px 28px;
+  background:transparent; border:none;
+  cursor:pointer; font-family:'DM Sans',sans-serif;
+  -webkit-tap-highlight-color:transparent;
+  border-radius:23px;
 }
-.rg-btn:active { opacity: 0.75; }
+.rg-btn:active { opacity:0.72; }
 
-.rg-icon { font-size: 15px; font-family: monospace; font-weight: 700; line-height: 1; }
-.rg-miss  .rg-icon { color: #A32D2D; }
-.rg-shaky .rg-icon { color: #854F0B; }
-.rg-got   .rg-icon { color: #0F6E56; }
-.rg-label { font-size: 14px; font-weight: 600; color: var(--text-primary); letter-spacing: -0.01em; }
+.rg-icon  { font-size:15px; font-family:monospace; font-weight:700; line-height:1; }
+.rg-miss  .rg-icon { color:#A32D2D; }
+.rg-shaky .rg-icon { color:#854F0B; }
+.rg-got   .rg-icon { color:#0F6E56; }
 
-/* divider between buttons */
+.rg-label { font-size:14px; font-weight:600; color:var(--text-primary); letter-spacing:-0.01em; }
+
 .rg-divider {
-  position: absolute; right: 0; top: 20%; height: 60%;
-  width: 1px; background: rgba(180,176,220,0.38); pointer-events: none;
+  position:absolute; right:0; top:20%; height:60%;
+  width:1px; background:rgba(180,176,220,0.38); pointer-events:none;
 }
 
-/* Space hint */
+/* ── Space hint ── */
 .bottom-kb-hint {
-  font-size: 12.5px; color: var(--text-secondary);
-  display: flex; align-items: center; gap: 6px;
-  margin: 0;
+  font-size:12.5px; color:var(--text-secondary);
+  display:flex; align-items:center; gap:6px; margin:0;
 }
 
-/* Done screen */
+/* ── Done screen ── */
 .done-wrap {
   max-width:500px; margin:0 auto; padding:3rem 0 5rem;
   display:flex; flex-direction:column; align-items:center;
@@ -702,7 +704,7 @@ kbd {
 .mc-amber .mastery-label { color:#854F0B; }
 .mc-red   .mastery-label { color:#A32D2D; }
 .mastery-bar-track { width:100%; height:3px; background:rgba(15,15,26,0.09); border-radius:999px; margin-top:12px; overflow:hidden; }
-.mastery-bar-fill { height:100%; border-radius:999px; transition:width 0.85s cubic-bezier(0.4,0,0.2,1); }
+.mastery-bar-fill  { height:100%; border-radius:999px; transition:width 0.85s cubic-bezier(0.4,0,0.2,1); }
 .mc-green .mastery-bar-fill { background:#1D9E75; }
 .mc-amber .mastery-bar-fill { background:#BA7517; }
 .mc-red   .mastery-bar-fill { background:#E24B4A; }
