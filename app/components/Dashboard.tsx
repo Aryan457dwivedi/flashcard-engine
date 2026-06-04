@@ -188,13 +188,9 @@ function StatusPill({ label, light = false }: { label: string; light?: boolean }
   );
 }
 
-function HealthDot({ tone, label }: { tone: string; label: string }) {
+function HealthDot({ label }: { tone: string; label: string }) {
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '10.5px', color: 'rgba(15,15,26,0.6)' }}>
-      <span style={{
-        width: '7px', height: '7px', borderRadius: '50%', background: tone,
-        boxShadow: `0 0 0 2px ${tone.replace('0.95', '0.12')}`,
-      }} />
+    <span style={{ display: 'inline-flex', alignItems: 'center', fontSize: '10.5px', color: 'rgba(15,15,26,0.6)' }}>
       {label}
     </span>
   );
@@ -484,48 +480,6 @@ export default function Dashboard({ decks }: { decks: Deck[] }) {
                 {heroStatus}
               </div>
 
-              {/* Current focus / Velocity / Confidence pills */}
-              <div className="lum-hero-pills">
-                <div style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '8px',
-                  padding: '6px 12px',
-                  background: 'rgba(255,255,255,0.10)',
-                  border: '1px solid rgba(255,255,255,0.20)',
-                  borderRadius: '999px',
-                  color: 'rgba(255,255,255,0.92)',
-                  fontSize: '12px', fontWeight: 500,
-                }}>
-                  <span style={{
-                    width: '6px', height: '6px', borderRadius: '50%',
-                    background: 'rgba(255,255,255,0.85)',
-                    boxShadow: '0 0 8px rgba(255,255,255,0.9)',
-                  }} />
-                  Current focus · {currentFocus}
-                </div>
-                <div style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '6px',
-                  padding: '6px 10px',
-                  background: 'rgba(255,255,255,0.06)',
-                  border: '1px solid rgba(255,255,255,0.16)',
-                  borderRadius: '999px',
-                  color: 'rgba(255,255,255,0.82)',
-                  fontSize: '11.5px', fontWeight: 500,
-                }}>
-                  Velocity · <span style={{ color: '#fff', fontWeight: 600 }}>{velocity.label}</span>
-                </div>
-                <div style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '6px',
-                  padding: '6px 10px',
-                  background: 'rgba(255,255,255,0.06)',
-                  border: '1px solid rgba(255,255,255,0.16)',
-                  borderRadius: '999px',
-                  color: 'rgba(255,255,255,0.82)',
-                  fontSize: '11.5px', fontWeight: 500,
-                }}>
-                  Confidence · <span style={{ color: '#fff', fontWeight: 600 }}>{confLabel}</span> ({confidence}%)
-                </div>
-              </div>
-
               <div className="lum-stat-row" style={{ marginTop: '22px' }}>
                 {[
                   { label: 'Mastery',   value: `${mastPct}%`      },
@@ -544,13 +498,26 @@ export default function Dashboard({ decks }: { decks: Deck[] }) {
             </div>
 
             {/* Ring */}
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <Ring pct={mastPct} size={140} />
-              <div style={{ position: 'absolute', textAlign: 'center' }}>
-                <div style={{ fontSize: '26px', fontWeight: 500, color: '#fff', lineHeight: 1 }}>{mastPct}%</div>
-                <div style={{ fontSize: '9px', fontWeight: 500, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: '3px' }}>
-                  mastery
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px', flexShrink: 0 }}>
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Ring pct={mastPct} size={140} />
+                <div style={{ position: 'absolute', textAlign: 'center' }}>
+                  <div style={{ fontSize: '26px', fontWeight: 500, color: '#fff', lineHeight: 1 }}>{mastPct}%</div>
+                  <div style={{ fontSize: '9px', fontWeight: 500, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: '3px' }}>
+                    mastery
+                  </div>
                 </div>
+              </div>
+              <div style={{
+                display: 'inline-flex', alignItems: 'center', gap: '6px',
+                padding: '6px 10px',
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.16)',
+                borderRadius: '999px',
+                color: 'rgba(255,255,255,0.82)',
+                fontSize: '11.5px', fontWeight: 500,
+              }}>
+                Velocity · <span style={{ color: '#fff', fontWeight: 600 }}>{velocity.label}</span>
               </div>
             </div>
           </div>
@@ -757,12 +724,7 @@ export default function Dashboard({ decks }: { decks: Deck[] }) {
                 {/* Header: name + ring */}
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
                   <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                      <span style={{
-                        width: '6px', height: '6px', borderRadius: '50%',
-                        background: health.tone,
-                        boxShadow: `0 0 8px ${health.tone}`,
-                      }} />
+                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: '4px' }}>
                       <span style={{ fontSize: '10px', fontWeight: 600, color: 'rgba(15,15,26,0.55)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                         {health.label}
                       </span>
