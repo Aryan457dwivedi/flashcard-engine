@@ -427,26 +427,23 @@ export default function Dashboard({ decks }: { decks: Deck[] }) {
         position: 'relative',
         borderRadius: '24px',
         overflow: 'hidden',
-        background: 'linear-gradient(140deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
+        background: 'linear-gradient(180deg, rgba(15,15,26,0.96), rgba(15,15,26,0.88))',
         padding: '2px',
       }}>
         <div aria-hidden style={{
           position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden', borderRadius: '24px',
         }}>
           <div style={{
-            position: 'absolute', top: '-60px', right: '-40px',
-            width: '320px', height: '320px', borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(180,180,220,0.25) 0%, transparent 70%)',
-          }} />
-          <div style={{
-            position: 'absolute', bottom: '-80px', left: '-60px',
-            width: '360px', height: '360px', borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(160,180,255,0.15) 0%, transparent 70%)',
+            position: 'absolute', top: '-40px', right: '-40px',
+            width: '200px', height: '200px', borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(180,180,220,0.18) 0%, transparent 70%)',
           }} />
         </div>
 
         <div className="lum-hero-pad" style={{
           ...GLASS,
+          background: 'linear-gradient(180deg, rgba(15,15,26,0.96), rgba(15,15,26,0.88))',
+          border: '1px solid rgba(255,255,255,0.06)',
           borderRadius: '22px',
           padding: '28px 30px',
           position: 'relative',
