@@ -3,7 +3,7 @@
 A smart flashcard generation system that converts PDFs into high-quality, practice-ready flashcards using AI and applies spaced repetition to improve long-term retention.
 
 ## Live Demo
-https://lumoradot.vercel.app/
+https://www.lumoradot.site
 
 
 ## Problem
