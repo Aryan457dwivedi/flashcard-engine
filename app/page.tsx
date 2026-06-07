@@ -84,7 +84,6 @@ export default function Home() {
   const [decks, setDecks] = useState<Deck[]>([]);
   const [activeDeck, setActiveDeck] = useState<Deck | null>(null);
   const [hoveredNav, setHoveredNav] = useState<string | null>(null);
-  // Ref so Practice can push live card state up at any time (including nav-away)
   const practiceFinishRef = useRef<(() => void) | null>(null);
 
   const addDeck = (deck: Deck) => {
@@ -154,7 +153,7 @@ export default function Home() {
           overflow-x: hidden;
         }
 
-        /* ── Dark gradient backdrop (fixed, behind everything) ── */
+        /* ── Fixed gradient backdrop (behind everything) ── */
         .hero-bg-fixed {
           position: fixed;
           inset: 0;
@@ -166,35 +165,50 @@ export default function Home() {
 
         .bg-hero-gradient {
           position: absolute;
-          inset: 0;
           background-image:
             radial-gradient(ellipse 100% 80% at 50% 110%, oklch(0.65 0.27 25) 0%, transparent 70%),
-            radial-gradient(ellipse 110% 70% at 50% 90%, oklch(0.72 0.25 0) 0%, transparent 75%),
-            radial-gradient(ellipse 140% 80% at 50% 60%, oklch(0.38 0.18 265) 0%, transparent 80%),
-            radial-gradient(ellipse 100% 80% at 50% 0%, oklch(0.18 0.03 270) 0%, oklch(0.12 0.02 270) 100%);
+            radial-gradient(ellipse 110% 70% at 50% 90%,  oklch(0.72 0.25 0)  0%, transparent 75%),
+            radial-gradient(ellipse 140% 80% at 50% 60%,  oklch(0.38 0.18 265) 0%, transparent 80%),
+            radial-gradient(ellipse 100% 80% at 50% 0%,   oklch(0.18 0.03 270) 0%, oklch(0.12 0.02 270) 100%);
           background-size: 120% 120%;
           background-position: 50% 100%;
           animation: hero-pan 18s ease-in-out infinite;
         }
 
+        /* Bottom layer — covers lower 70% of viewport */
         .hero-bg-fixed .layer-bottom {
-          position: absolute;
           inset-inline: 0;
           bottom: 0;
           height: 70%;
-          opacity: 0.4;
-          -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.05) 8%, rgba(0,0,0,0.2) 18%, rgba(0,0,0,0.45) 30%, rgba(0,0,0,0.75) 45%, black 65%);
-                  mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.05) 8%, rgba(0,0,0,0.2) 18%, rgba(0,0,0,0.45) 30%, rgba(0,0,0,0.75) 45%, black 65%);
+          opacity: 0.55;
+          -webkit-mask-image: linear-gradient(to bottom,
+            transparent 0%, rgba(0,0,0,0.05) 8%, rgba(0,0,0,0.2) 18%,
+            rgba(0,0,0,0.45) 30%, rgba(0,0,0,0.75) 45%, black 65%);
+                  mask-image: linear-gradient(to bottom,
+            transparent 0%, rgba(0,0,0,0.05) 8%, rgba(0,0,0,0.2) 18%,
+            rgba(0,0,0,0.45) 30%, rgba(0,0,0,0.75) 45%, black 65%);
         }
 
+        /* Blob container — mid-viewport */
         .hero-bg-fixed .layer-blobs {
           position: absolute;
           inset-inline: 0;
           top: 25%;
           bottom: -40vh;
           overflow: hidden;
-          -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.08) 12%, rgba(0,0,0,0.24) 28%, rgba(0,0,0,0.45) 44%, rgba(0,0,0,0.72) 60%, rgba(0,0,0,0.92) 76%, transparent 100%);
-                  mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.08) 12%, rgba(0,0,0,0.24) 28%, rgba(0,0,0,0.45) 44%, rgba(0,0,0,0.72) 60%, rgba(0,0,0,0.92) 76%, transparent 100%);
+          -webkit-mask-image: linear-gradient(to bottom,
+            transparent 0%, rgba(0,0,0,0.08) 12%, rgba(0,0,0,0.24) 28%,
+            rgba(0,0,0,0.45) 44%, rgba(0,0,0,0.72) 60%,
+            rgba(0,0,0,0.92) 76%, transparent 100%);
+                  mask-image: linear-gradient(to bottom,
+            transparent 0%, rgba(0,0,0,0.08) 12%, rgba(0,0,0,0.24) 28%,
+            rgba(0,0,0,0.45) 44%, rgba(0,0,0,0.72) 60%,
+            rgba(0,0,0,0.92) 76%, transparent 100%);
+        }
+
+        /* The gradient layer inside blob container */
+        .layer-blobs > .bg-hero-gradient {
+          inset: 0;
         }
 
         .hero-blob {
@@ -204,6 +218,16 @@ export default function Home() {
           opacity: 0.7;
           pointer-events: none;
           will-change: transform;
+        }
+
+        /* Footer fade — masks the gradient so it fades cleanly to black at the bottom */
+        .hero-bg-fixed .layer-footer-fade {
+          position: absolute;
+          inset-inline: 0;
+          bottom: 0;
+          height: 260px;
+          background: linear-gradient(to bottom, transparent 0%, #000 100%);
+          pointer-events: none;
         }
 
         /* ── Top bar ── */
@@ -417,10 +441,8 @@ export default function Home() {
         .site-footer {
           position: relative;
           z-index: 1;
+          background: #000;
           border-top: 1px solid rgba(255,255,255,0.08);
-          background: rgba(10,10,20,0.55);
-          backdrop-filter: blur(24px);
-          -webkit-backdrop-filter: blur(24px);
           padding: 32px 36px 28px;
         }
 
@@ -489,11 +511,14 @@ export default function Home() {
         }
       `}</style>
 
-      {/* ── Dark gradient backdrop ── */}
+      {/* ── Fixed gradient backdrop (renders behind all content) ── */}
       <div className="hero-bg-fixed" aria-hidden="true">
+        {/* Bottom radial gradient layer */}
         <div className="bg-hero-gradient layer-bottom" />
+
+        {/* Blob + gradient mid-layer */}
         <div className="layer-blobs">
-          <div className="bg-hero-gradient" style={{ inset: 0 }} />
+          <div className="bg-hero-gradient" />
           <div
             className="hero-blob"
             style={{
@@ -543,9 +568,12 @@ export default function Home() {
             }}
           />
         </div>
+
+        {/* Fades gradient cleanly into solid black at page bottom */}
+        <div className="layer-footer-fade" />
       </div>
 
-      {/* ── Top Bar ── */}
+      {/* ── Top Bar (untouched) ── */}
       <header className="top-bar">
         <div className="logo" onClick={() => setScreen('home')}>Lumora.</div>
 
@@ -582,8 +610,8 @@ export default function Home() {
       {/* ── Main Content ── */}
       <main className="main-wrap">
         <div className="inner">
-          {screen === 'home' && <Upload onDeckCreated={addDeck} />}
-          {screen === 'decks' && <Decks decks={decks} onPractice={startPractice} />}
+          {screen === 'home'     && <Upload onDeckCreated={addDeck} />}
+          {screen === 'decks'    && <Decks decks={decks} onPractice={startPractice} />}
           {screen === 'practice' && activeDeck && (
             <Practice
               deck={activeDeck}
@@ -598,7 +626,7 @@ export default function Home() {
         </div>
       </main>
 
-      {/* ── Footer ── */}
+      {/* ── Footer (solid black) ── */}
       <footer className="site-footer">
         <div className="footer-inner">
           <div>
