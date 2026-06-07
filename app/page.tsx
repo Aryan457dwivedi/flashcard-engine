@@ -581,8 +581,8 @@ export default function Home() {
       {/* ── Main ── */}
       <main className="main-wrap">
         <div className="inner">
-          {screen === 'home'     && <Upload onAdd={addDeck} />}
-          {screen === 'decks'    && <Decks decks={decks} onStart={startPractice} />}
+         {screen === 'home'  && <Upload onDeckCreated={addDeck} />}
+          {screen === 'decks' && <Decks decks={decks} onPractice={startPractice} />}
           {screen === 'practice' && activeDeck && (
             <Practice
               deck={activeDeck}
