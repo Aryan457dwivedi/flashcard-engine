@@ -104,7 +104,6 @@ export default function Home() {
 
   const handleNavClick = (s: string) => {
     if (s === 'practice' && !activeDeck) return;
-    // If navigating away from practice, flush current card state first
     if (screen === 'practice' && s !== 'practice' && practiceFinishRef.current) {
       practiceFinishRef.current();
     }
@@ -117,114 +116,94 @@ export default function Home() {
         @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap');
 
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        html { color-scheme: light; }
+        html { color-scheme: dark; }
 
         @keyframes shimmer-x {
           0%   { background-position: -200% center; }
           100% { background-position:  200% center; }
         }
-        @keyframes orb-a {
-          0%,100% { transform: translate(0,0) scale(1); }
-          40%     { transform: translate(20px,-14px) scale(1.05); }
-          70%     { transform: translate(-10px, 8px) scale(0.97); }
+        @keyframes hero-pan {
+          0%, 100% { background-position: 50% 100%; }
+          50%      { background-position: 50% 90%; }
         }
-        @keyframes orb-b {
-          0%,100% { transform: translate(0,0) scale(1); }
-          35%     { transform: translate(-24px,16px) scale(1.06); }
-          65%     { transform: translate(12px,-6px) scale(0.95); }
+        @keyframes blob-drift-a {
+          0%   { transform: translate3d(-16%, 12%, 0) scale(1); }
+          33%  { transform: translate3d(18%, -8%, 0) scale(1.16); }
+          66%  { transform: translate3d(8%, 20%, 0) scale(1.08); }
+          100% { transform: translate3d(-16%, 12%, 0) scale(1); }
         }
-        @keyframes orb-c {
-          0%,100% { transform: translate(0,0); }
-          50%     { transform: translate(10px, 22px); }
+        @keyframes blob-drift-b {
+          0%   { transform: translate3d(14%, 8%, 0) scale(1.08); }
+          33%  { transform: translate3d(-18%, 20%, 0) scale(0.97); }
+          66%  { transform: translate3d(16%, -10%, 0) scale(1.16); }
+          100% { transform: translate3d(14%, 8%, 0) scale(1.08); }
+        }
+        @keyframes blob-drift-c {
+          0%   { transform: translate3d(-10%, 18%, 0) scale(1.04); }
+          33%  { transform: translate3d(14%, -10%, 0) scale(1.14); }
+          66%  { transform: translate3d(-16%, 10%, 0) scale(1.08); }
+          100% { transform: translate3d(-10%, 18%, 0) scale(1.04); }
         }
 
         body {
-          background: linear-gradient(
-            160deg,
-            #d8d4ee 0%,
-            #dedad0 20%,
-            #e2dce8 38%,
-            #d8e2ee 55%,
-            #d4e8e0 72%,
-            #dce4d8 88%,
-            #e0ddd4 100%
-          );
-          background-attachment: fixed;
-          color: #1a1a2e;
+          background: #000;
+          color: #f5f5f7;
           font-family: 'Inter', sans-serif;
           min-height: 100dvh;
           -webkit-font-smoothing: antialiased;
           overflow-x: hidden;
         }
 
-        body::before {
-          content: '';
+        /* ── Dark gradient backdrop (fixed, behind everything) ── */
+        .hero-bg-fixed {
           position: fixed;
-          width: 820px; height: 600px;
-          top: -240px; left: -180px;
-          border-radius: 50%;
-          background: radial-gradient(ellipse at 38% 38%,
-            rgba(99,88,240,0.32) 0%,
-            rgba(120,100,255,0.18) 30%,
-            rgba(91,91,214,0.08) 58%,
-            transparent 75%
-          );
-          filter: blur(72px);
-          pointer-events: none;
+          inset: 0;
           z-index: 0;
-          animation: orb-a 16s ease-in-out infinite;
+          background: #000;
+          overflow: hidden;
+          pointer-events: none;
         }
 
-        body::after {
-          content: '';
-          position: fixed;
-          width: 640px; height: 500px;
-          bottom: -160px; right: -100px;
-          border-radius: 50%;
-          background: radial-gradient(ellipse at 60% 60%,
-            rgba(80,140,240,0.22) 0%,
-            rgba(91,130,214,0.12) 42%,
-            rgba(100,180,220,0.06) 65%,
-            transparent 80%
-          );
-          filter: blur(68px);
-          pointer-events: none;
-          z-index: 0;
-          animation: orb-b 20s ease-in-out infinite;
+        .bg-hero-gradient {
+          position: absolute;
+          inset: 0;
+          background-image:
+            radial-gradient(ellipse 100% 80% at 50% 110%, oklch(0.65 0.27 25) 0%, transparent 70%),
+            radial-gradient(ellipse 110% 70% at 50% 90%, oklch(0.72 0.25 0) 0%, transparent 75%),
+            radial-gradient(ellipse 140% 80% at 50% 60%, oklch(0.38 0.18 265) 0%, transparent 80%),
+            radial-gradient(ellipse 100% 80% at 50% 0%, oklch(0.18 0.03 270) 0%, oklch(0.12 0.02 270) 100%);
+          background-size: 120% 120%;
+          background-position: 50% 100%;
+          animation: hero-pan 18s ease-in-out infinite;
         }
 
-        .page-glow {
-          position: fixed;
-          top: 44%; left: 50%;
-          transform: translate(-50%, -50%);
-          width: 720px; height: 480px;
-          border-radius: 50%;
-          background: radial-gradient(ellipse at 50% 50%,
-            rgba(91,91,214,0.09) 0%,
-            rgba(120,110,255,0.04) 42%,
-            transparent 68%
-          );
-          filter: blur(44px);
-          pointer-events: none;
-          z-index: 0;
-          animation: orb-c 24s ease-in-out infinite;
+        .hero-bg-fixed .layer-bottom {
+          position: absolute;
+          inset-inline: 0;
+          bottom: 0;
+          height: 70%;
+          opacity: 0.4;
+          -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.05) 8%, rgba(0,0,0,0.2) 18%, rgba(0,0,0,0.45) 30%, rgba(0,0,0,0.75) 45%, black 65%);
+                  mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.05) 8%, rgba(0,0,0,0.2) 18%, rgba(0,0,0,0.45) 30%, rgba(0,0,0,0.75) 45%, black 65%);
         }
 
-        .orb-mid {
-          position: fixed;
-          top: 55%; left: 65%;
-          transform: translate(-50%, -50%);
-          width: 480px; height: 360px;
-          border-radius: 50%;
-          background: radial-gradient(ellipse at 50% 50%,
-            rgba(180,120,255,0.12) 0%,
-            rgba(140,100,240,0.06) 50%,
-            transparent 72%
-          );
-          filter: blur(52px);
+        .hero-bg-fixed .layer-blobs {
+          position: absolute;
+          inset-inline: 0;
+          top: 25%;
+          bottom: -40vh;
+          overflow: hidden;
+          -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.08) 12%, rgba(0,0,0,0.24) 28%, rgba(0,0,0,0.45) 44%, rgba(0,0,0,0.72) 60%, rgba(0,0,0,0.92) 76%, transparent 100%);
+                  mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.08) 12%, rgba(0,0,0,0.24) 28%, rgba(0,0,0,0.45) 44%, rgba(0,0,0,0.72) 60%, rgba(0,0,0,0.92) 76%, transparent 100%);
+        }
+
+        .hero-blob {
+          position: absolute;
+          border-radius: 9999px;
+          filter: blur(80px);
+          opacity: 0.7;
           pointer-events: none;
-          z-index: 0;
-          animation: orb-c 18s ease-in-out infinite 3s;
+          will-change: transform;
         }
 
         /* ── Top bar ── */
@@ -237,14 +216,14 @@ export default function Home() {
           grid-template-columns: 1fr auto 1fr;
           align-items: center;
           padding: 0 36px;
-          background: rgba(215,212,205,0.50);
-backdrop-filter: blur(24px);
--webkit-backdrop-filter: blur(24px);
-          border-bottom: 1px solid rgba(91,91,214,0.08);
+          background: rgba(10,10,20,0.45);
+          backdrop-filter: blur(24px);
+          -webkit-backdrop-filter: blur(24px);
+          border-bottom: 1px solid rgba(255,255,255,0.08);
           box-shadow:
-            0 1px 0 rgba(255,255,255,0.9),
-            0 4px 40px rgba(91,91,214,0.07),
-            0 1px 3px rgba(0,0,0,0.04);
+            0 1px 0 rgba(255,255,255,0.04),
+            0 4px 40px rgba(0,0,0,0.35),
+            0 1px 3px rgba(0,0,0,0.3);
           isolation: isolate;
         }
 
@@ -257,9 +236,9 @@ backdrop-filter: blur(24px);
             90deg,
             transparent 0%,
             rgba(140,120,255,0.18) 15%,
-            rgba(100,90,255,0.55) 38%,
-            rgba(91,91,214,0.82) 50%,
-            rgba(100,90,255,0.55) 62%,
+            rgba(160,140,255,0.55) 38%,
+            rgba(180,160,255,0.82) 50%,
+            rgba(160,140,255,0.55) 62%,
             rgba(140,120,255,0.18) 85%,
             transparent 100%
           );
@@ -273,8 +252,8 @@ backdrop-filter: blur(24px);
           transform: translateX(-50%);
           width: 560px; height: 64px;
           background: radial-gradient(ellipse at 50% 100%,
-            rgba(91,91,214,0.20) 0%,
-            rgba(110,100,255,0.08) 45%,
+            rgba(140,120,255,0.28) 0%,
+            rgba(160,140,255,0.10) 45%,
             transparent 70%
           );
           filter: blur(12px);
@@ -289,7 +268,7 @@ backdrop-filter: blur(24px);
           letter-spacing: -0.5px;
           cursor: pointer;
           user-select: none;
-          color: #0a0a0a;
+          color: #ffffff;
           justify-self: start;
         }
 
@@ -298,14 +277,14 @@ backdrop-filter: blur(24px);
           display: flex;
           align-items: center;
           gap: 2px;
-          background: rgba(255,255,255,0.78);
-          border: 1px solid rgba(91,91,214,0.12);
+          background: rgba(255,255,255,0.06);
+          border: 1px solid rgba(255,255,255,0.10);
           border-radius: 999px;
           padding: 5px;
           box-shadow:
-            0 1px 4px rgba(0,0,0,0.06),
-            0 0 0 1px rgba(255,255,255,0.7) inset,
-            0 2px 16px rgba(91,91,214,0.05);
+            0 1px 4px rgba(0,0,0,0.4),
+            0 0 0 1px rgba(255,255,255,0.04) inset,
+            0 2px 16px rgba(140,120,255,0.08);
         }
 
         .nav-btn {
@@ -318,7 +297,7 @@ backdrop-filter: blur(24px);
           font-family: 'Inter', sans-serif;
           font-size: 13px;
           font-weight: 500;
-          color: rgba(26,26,46,0.42);
+          color: rgba(245,245,247,0.55);
           letter-spacing: 0.01em;
           transition: color 0.18s, background 0.18s, transform 0.14s, box-shadow 0.18s;
           white-space: nowrap;
@@ -330,8 +309,8 @@ backdrop-filter: blur(24px);
           position: absolute; inset: 0;
           border-radius: 999px;
           background: linear-gradient(135deg,
-            rgba(91,91,214,0.10) 0%,
-            rgba(123,104,238,0.05) 100%
+            rgba(160,140,255,0.14) 0%,
+            rgba(200,140,220,0.08) 100%
           );
           opacity: 0;
           transition: opacity 0.18s;
@@ -339,19 +318,19 @@ backdrop-filter: blur(24px);
         }
 
         .nav-btn:hover::before { opacity: 1; }
-        .nav-btn:hover { color: rgba(26,26,46,0.82); transform: translateY(-1px); }
+        .nav-btn:hover { color: #fff; transform: translateY(-1px); }
 
         .nav-btn.active {
-          color: #5b5bd6;
+          color: #fff;
           background: linear-gradient(135deg,
-            rgba(91,91,214,0.13) 0%,
-            rgba(120,100,240,0.08) 100%
+            rgba(160,140,255,0.22) 0%,
+            rgba(200,140,220,0.14) 100%
           );
           box-shadow:
-            0 0 0 1px rgba(91,91,214,0.22),
-            0 2px 12px rgba(91,91,214,0.14),
-            0 0 24px rgba(91,91,214,0.07),
-            inset 0 1px 0 rgba(255,255,255,0.78);
+            0 0 0 1px rgba(180,160,255,0.32),
+            0 2px 12px rgba(140,120,255,0.22),
+            0 0 24px rgba(160,140,255,0.14),
+            inset 0 1px 0 rgba(255,255,255,0.14);
         }
 
         .nav-btn.active::before { opacity: 0; }
@@ -370,38 +349,37 @@ backdrop-filter: blur(24px);
           display: flex;
           align-items: center;
           gap: 7px;
-          background: rgba(255,255,255,0.82);
-          border: 1px solid rgba(91,91,214,0.12);
+          background: rgba(255,255,255,0.06);
+          border: 1px solid rgba(255,255,255,0.10);
           border-radius: 999px;
           padding: 6px 14px;
           box-shadow:
-            0 1px 3px rgba(0,0,0,0.05),
-            inset 0 1px 0 rgba(255,255,255,0.95);
-          transition: border-color 0.2s, box-shadow 0.2s;
+            0 1px 3px rgba(0,0,0,0.3),
+            inset 0 1px 0 rgba(255,255,255,0.05);
         }
         .search-pill:focus-within {
-          border-color: rgba(91,91,214,0.38);
+          border-color: rgba(180,160,255,0.42);
           box-shadow:
-            0 0 0 3px rgba(91,91,214,0.09),
-            0 0 18px rgba(91,91,214,0.09),
-            inset 0 1px 0 rgba(255,255,255,0.95);
+            0 0 0 3px rgba(160,140,255,0.14),
+            0 0 18px rgba(160,140,255,0.14),
+            inset 0 1px 0 rgba(255,255,255,0.06);
         }
-        .search-icon { color: rgba(26,26,46,0.28); flex-shrink: 0; pointer-events: none; }
+        .search-icon { color: rgba(245,245,247,0.45); flex-shrink: 0; pointer-events: none; }
         .search-input {
           border: none; outline: none;
           background: transparent;
           font-family: 'Inter', sans-serif;
-          font-size: 13px; color: #1a1a2e;
+          font-size: 13px; color: #f5f5f7;
           width: 140px;
         }
-        .search-input::placeholder { color: rgba(26,26,46,0.33); }
+        .search-input::placeholder { color: rgba(245,245,247,0.4); }
 
         .version-badge {
           position: relative;
           font-size: 11px; font-weight: 600;
-          color: #5b5bd6;
-          background: rgba(91,91,214,0.08);
-          border: 1px solid rgba(91,91,214,0.20);
+          color: #d8ccff;
+          background: rgba(160,140,255,0.14);
+          border: 1px solid rgba(180,160,255,0.30);
           border-radius: 999px;
           padding: 3px 10px;
           letter-spacing: 0.05em;
@@ -414,7 +392,7 @@ backdrop-filter: blur(24px);
           border-radius: 999px;
           background: linear-gradient(105deg,
             transparent 25%,
-            rgba(255,255,255,0.65) 50%,
+            rgba(255,255,255,0.35) 50%,
             transparent 75%
           );
           background-size: 200% 100%;
@@ -439,8 +417,8 @@ backdrop-filter: blur(24px);
         .site-footer {
           position: relative;
           z-index: 1;
-          border-top: 1px solid rgba(91,91,214,0.10);
-          background: rgba(215,212,205,0.50);
+          border-top: 1px solid rgba(255,255,255,0.08);
+          background: rgba(10,10,20,0.55);
           backdrop-filter: blur(24px);
           -webkit-backdrop-filter: blur(24px);
           padding: 32px 36px 28px;
@@ -460,13 +438,13 @@ backdrop-filter: blur(24px);
           font-weight: 900;
           font-size: 22px;
           letter-spacing: -0.4px;
-          color: #0a0a0a;
+          color: #ffffff;
           margin-bottom: 4px;
         }
 
         .footer-tagline {
           font-size: 12px;
-          color: rgba(26,26,46,0.62);
+          color: rgba(245,245,247,0.55);
           letter-spacing: 0.01em;
         }
 
@@ -478,7 +456,7 @@ backdrop-filter: blur(24px);
 
         .footer-link {
           font-size: 12px;
-          color: rgba(26,26,46,0.62);
+          color: rgba(245,245,247,0.55);
           text-decoration: none;
           font-weight: 500;
           letter-spacing: 0.01em;
@@ -489,21 +467,21 @@ backdrop-filter: blur(24px);
           padding: 0;
           font-family: 'Inter', sans-serif;
         }
-        .footer-link:hover { color: rgba(26,26,46,0.88); }
+        .footer-link:hover { color: #fff; }
 
         .footer-divider {
           width: 1px;
           height: 12px;
-          background: rgba(91,91,214,0.15);
+          background: rgba(255,255,255,0.12);
         }
 
         .footer-copy {
           font-size: 11px;
-          color: rgba(26,26,46,0.50);
+          color: rgba(245,245,247,0.42);
           letter-spacing: 0.02em;
           margin-top: 20px;
           padding-top: 16px;
-          border-top: 1px solid rgba(91,91,214,0.06);
+          border-top: 1px solid rgba(255,255,255,0.06);
           text-align: center;
           max-width: 860px;
           margin-left: auto;
@@ -511,9 +489,61 @@ backdrop-filter: blur(24px);
         }
       `}</style>
 
-      {/* Background orbs */}
-      <div className="page-glow" aria-hidden="true" />
-      <div className="orb-mid"   aria-hidden="true" />
+      {/* ── Dark gradient backdrop ── */}
+      <div className="hero-bg-fixed" aria-hidden="true">
+        <div className="bg-hero-gradient layer-bottom" />
+        <div className="layer-blobs">
+          <div className="bg-hero-gradient" style={{ inset: 0 }} />
+          <div
+            className="hero-blob"
+            style={{
+              width: '70vw', height: '70vw',
+              left: '-10vw', bottom: '-25vw',
+              background: 'radial-gradient(circle, oklch(0.65 0.27 25) 0%, transparent 60%)',
+              animation: 'blob-drift-a 12s ease-in-out infinite',
+            }}
+          />
+          <div
+            className="hero-blob"
+            style={{
+              width: '80vw', height: '80vw',
+              right: '-20vw', bottom: '-30vw',
+              background: 'radial-gradient(circle, oklch(0.72 0.25 0) 0%, transparent 60%)',
+              animation: 'blob-drift-b 15s ease-in-out infinite',
+            }}
+          />
+          <div
+            className="hero-blob"
+            style={{
+              width: '75vw', height: '75vw',
+              left: '10vw', top: '-15vw',
+              background: 'radial-gradient(circle, oklch(0.45 0.2 265) 0%, transparent 60%)',
+              animation: 'blob-drift-c 12s ease-in-out infinite',
+              opacity: 0.7,
+            }}
+          />
+          <div
+            className="hero-blob"
+            style={{
+              width: '55vw', height: '55vw',
+              left: '-5vw', top: '-25vw',
+              background: 'radial-gradient(circle, oklch(0.5 0.22 265) 0%, transparent 60%)',
+              animation: 'blob-drift-a 10s ease-in-out infinite',
+              opacity: 0.65,
+            }}
+          />
+          <div
+            className="hero-blob"
+            style={{
+              width: '50vw', height: '50vw',
+              right: '-5vw', top: '-20vw',
+              background: 'radial-gradient(circle, oklch(0.48 0.2 270) 0%, transparent 60%)',
+              animation: 'blob-drift-b 13s ease-in-out infinite',
+              opacity: 0.6,
+            }}
+          />
+        </div>
+      </div>
 
       {/* ── Top Bar ── */}
       <header className="top-bar">
@@ -526,7 +556,7 @@ backdrop-filter: blur(24px);
             return (
               <button
                 key={s}
-                className={`nav-btn${isActive ? ' active' : ''}${isDisabled ? ' disabled' : ''}`}
+                className={`nav-btn ${isActive ? 'active' : ''} ${isDisabled ? 'disabled' : ''}`}
                 onClick={() => handleNavClick(s)}
                 onMouseEnter={() => setHoveredNav(s)}
                 onMouseLeave={() => setHoveredNav(null)}
@@ -539,9 +569,9 @@ backdrop-filter: blur(24px);
 
         <div className="nav-right">
           <div className="search-pill">
-            <svg className="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            <svg className="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="7" />
+              <path d="m21 21-4.3-4.3" />
             </svg>
             <input className="search-input" placeholder="Search decks…" />
           </div>
@@ -552,8 +582,8 @@ backdrop-filter: blur(24px);
       {/* ── Main Content ── */}
       <main className="main-wrap">
         <div className="inner">
-          {screen === 'home'     && <Upload onDeckCreated={addDeck} />}
-          {screen === 'decks'    && <Decks decks={decks} onPractice={startPractice} />}
+          {screen === 'home'     && <Upload onAddDeck={addDeck} />}
+          {screen === 'decks'    && <Decks decks={decks} onStartPractice={startPractice} />}
           {screen === 'practice' && activeDeck && (
             <Practice
               deck={activeDeck}
@@ -561,7 +591,7 @@ backdrop-filter: blur(24px);
                 updateDeck(updatedDeck);
                 setScreen('decks');
               }}
-              onRegisterSave={(saveFn) => { practiceFinishRef.current = saveFn; }}
+              onRegisterSave={(saveFn: () => void) => { practiceFinishRef.current = saveFn; }}
             />
           )}
           {screen === 'dashboard' && <Dashboard decks={decks} />}
@@ -574,73 +604,21 @@ backdrop-filter: blur(24px);
           <div>
             <div className="footer-logo">Lumora.</div>
             <div className="footer-tagline">
-              <TextGenerateEffect
-                words=".pdf to AI flashcards"
-                duration={0.4}
-                staggerDelay={0.10}
-              />
+              <TextGenerateEffect words="Spaced repetition, refined." />
             </div>
           </div>
-          <nav className="footer-links">
+          <div className="footer-links">
             <button className="footer-link" onClick={() => setScreen('home')}>Upload</button>
             <div className="footer-divider" />
             <button className="footer-link" onClick={() => setScreen('decks')}>Library</button>
             <div className="footer-divider" />
             <button className="footer-link" onClick={() => setScreen('dashboard')}>Stats</button>
-          </nav>
+          </div>
         </div>
-        <p className="footer-copy">
+        <div className="footer-copy">
           © {new Date().getFullYear()} Lumora. Enhancing learning through spaced repetition.
-        </p>
+        </div>
       </footer>
     </>
-  );
-}
-
-/**
- * DropZoneGrid
- */
-export function DropZoneGrid() {
-  return (
-    <svg
-      style={{
-        position: 'absolute',
-        inset: 0,
-        width: '100%',
-        height: '100%',
-        borderRadius: '14px',
-        pointerEvents: 'none',
-        zIndex: 1,
-      }}
-      viewBox="0 0 600 260"
-      preserveAspectRatio="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <defs>
-        <pattern id="evenGrid" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
-          <path d="M40 0L0 0 0 40" fill="none" stroke="rgba(91,91,214,0.13)" strokeWidth="0.8"/>
-        </pattern>
-        <radialGradient id="gridFade" cx="50%" cy="50%" r="58%">
-          <stop offset="0%"   stopColor="white" stopOpacity="1"/>
-          <stop offset="55%"  stopColor="white" stopOpacity="0.72"/>
-          <stop offset="100%" stopColor="white" stopOpacity="0"/>
-        </radialGradient>
-        <mask id="gridMask">
-          <rect width="600" height="260" fill="url(#gridFade)"/>
-        </mask>
-      </defs>
-      <rect width="600" height="260" fill="url(#evenGrid)" mask="url(#gridMask)"/>
-      <path d="M0 0 L36 0 M0 0 L0 36"
-        stroke="rgba(91,91,214,0.45)" strokeWidth="1.5" fill="none" strokeLinecap="square"/>
-      <path d="M600 0 L564 0 M600 0 L600 36"
-        stroke="rgba(91,91,214,0.45)" strokeWidth="1.5" fill="none" strokeLinecap="square"/>
-      <path d="M0 260 L36 260 M0 260 L0 224"
-        stroke="rgba(91,91,214,0.45)" strokeWidth="1.5" fill="none" strokeLinecap="square"/>
-      <path d="M600 260 L564 260 M600 260 L600 224"
-        stroke="rgba(91,91,214,0.45)" strokeWidth="1.5" fill="none" strokeLinecap="square"/>
-      <circle cx="300" cy="130" r="1.8" fill="rgba(91,91,214,0.28)"/>
-      <line x1="288" y1="130" x2="312" y2="130" stroke="rgba(91,91,214,0.16)" strokeWidth="1"/>
-      <line x1="300" y1="118" x2="300" y2="142" stroke="rgba(91,91,214,0.16)" strokeWidth="1"/>
-    </svg>
   );
 }
