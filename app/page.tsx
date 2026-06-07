@@ -583,7 +583,7 @@ export default function Home() {
       <main className="main-wrap">
         <div className="inner">
           {screen === 'home' && <Upload onDeckCreated={addDeck} />}
-          {screen === 'decks'    && <Decks decks={decks} onStartPractice={startPractice} />}
+          {screen === 'decks' && <Decks decks={decks} onPractice={startPractice} />}
           {screen === 'practice' && activeDeck && (
             <Practice
               deck={activeDeck}
