@@ -153,7 +153,7 @@ export default function Home() {
           overflow-x: hidden;
         }
 
-        /* ── Fixed gradient backdrop (behind everything) ── */
+        /* ── Fixed gradient backdrop (behind everything, full viewport always) ── */
         .hero-bg-fixed {
           position: fixed;
           inset: 0;
@@ -175,7 +175,6 @@ export default function Home() {
           animation: hero-pan 18s ease-in-out infinite;
         }
 
-        /* Bottom layer — covers lower 70% of viewport */
         .hero-bg-fixed .layer-bottom {
           inset-inline: 0;
           bottom: 0;
@@ -189,7 +188,6 @@ export default function Home() {
             rgba(0,0,0,0.45) 30%, rgba(0,0,0,0.75) 45%, black 65%);
         }
 
-        /* Blob container — mid-viewport */
         .hero-bg-fixed .layer-blobs {
           position: absolute;
           inset-inline: 0;
@@ -206,10 +204,7 @@ export default function Home() {
             rgba(0,0,0,0.92) 76%, transparent 100%);
         }
 
-        /* The gradient layer inside blob container */
-        .layer-blobs > .bg-hero-gradient {
-          inset: 0;
-        }
+        .layer-blobs > .bg-hero-gradient { inset: 0; }
 
         .hero-blob {
           position: absolute;
@@ -218,16 +213,6 @@ export default function Home() {
           opacity: 0.7;
           pointer-events: none;
           will-change: transform;
-        }
-
-        /* Footer fade — masks the gradient so it fades cleanly to black at the bottom */
-        .hero-bg-fixed .layer-footer-fade {
-          position: absolute;
-          inset-inline: 0;
-          bottom: 0;
-          height: 260px;
-          background: linear-gradient(to bottom, transparent 0%, #000 100%);
-          pointer-events: none;
         }
 
         /* ── Top bar ── */
@@ -284,7 +269,6 @@ export default function Home() {
           pointer-events: none;
         }
 
-        /* ── Logo ── */
         .logo {
           font-family: 'Space Grotesk', sans-serif;
           font-weight: 900;
@@ -296,7 +280,6 @@ export default function Home() {
           justify-self: start;
         }
 
-        /* ── Nav ── */
         .nav-links {
           display: flex;
           align-items: center;
@@ -361,7 +344,6 @@ export default function Home() {
         .nav-btn:active { transform: scale(0.96) translateY(0); }
         .nav-btn.disabled { opacity: 0.28; cursor: not-allowed; pointer-events: none; }
 
-        /* ── Right side ── */
         .nav-right {
           justify-self: end;
           display: flex;
@@ -437,13 +419,15 @@ export default function Home() {
           padding: 28px 24px 48px;
         }
 
-        /* ── Footer ── */
+        /* ── Footer (transparent so the fixed gradient shows through) ── */
         .site-footer {
           position: relative;
           z-index: 1;
-          background: #000;
+          background: transparent;
           border-top: 1px solid rgba(255,255,255,0.08);
           padding: 32px 36px 28px;
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
         }
 
         .footer-inner {
@@ -466,7 +450,7 @@ export default function Home() {
 
         .footer-tagline {
           font-size: 12px;
-          color: rgba(245,245,247,0.55);
+          color: rgba(245,245,247,0.7);
           letter-spacing: 0.01em;
         }
 
@@ -478,7 +462,7 @@ export default function Home() {
 
         .footer-link {
           font-size: 12px;
-          color: rgba(245,245,247,0.55);
+          color: rgba(245,245,247,0.7);
           text-decoration: none;
           font-weight: 500;
           letter-spacing: 0.01em;
@@ -494,16 +478,16 @@ export default function Home() {
         .footer-divider {
           width: 1px;
           height: 12px;
-          background: rgba(255,255,255,0.12);
+          background: rgba(255,255,255,0.18);
         }
 
         .footer-copy {
           font-size: 11px;
-          color: rgba(245,245,247,0.42);
+          color: rgba(245,245,247,0.55);
           letter-spacing: 0.02em;
           margin-top: 20px;
           padding-top: 16px;
-          border-top: 1px solid rgba(255,255,255,0.06);
+          border-top: 1px solid rgba(255,255,255,0.08);
           text-align: center;
           max-width: 860px;
           margin-left: auto;
@@ -511,19 +495,15 @@ export default function Home() {
         }
       `}</style>
 
-      {/* ── Fixed gradient backdrop (renders behind all content) ── */}
+      {/* ── Fixed gradient backdrop (renders behind all content, including footer) ── */}
       <div className="hero-bg-fixed" aria-hidden="true">
-        {/* Bottom radial gradient layer */}
         <div className="bg-hero-gradient layer-bottom" />
-
-        {/* Blob + gradient mid-layer */}
         <div className="layer-blobs">
           <div className="bg-hero-gradient" />
           <div
             className="hero-blob"
             style={{
-              width: '70vw', height: '70vw',
-              left: '-10vw', bottom: '-25vw',
+              width: '70vw', height: '70vw', left: '-10vw', bottom: '-25vw',
               background: 'radial-gradient(circle, oklch(0.65 0.27 25) 0%, transparent 60%)',
               animation: 'blob-drift-a 12s ease-in-out infinite',
             }}
@@ -531,8 +511,7 @@ export default function Home() {
           <div
             className="hero-blob"
             style={{
-              width: '80vw', height: '80vw',
-              right: '-20vw', bottom: '-30vw',
+              width: '80vw', height: '80vw', right: '-20vw', bottom: '-30vw',
               background: 'radial-gradient(circle, oklch(0.72 0.25 0) 0%, transparent 60%)',
               animation: 'blob-drift-b 15s ease-in-out infinite',
             }}
@@ -540,8 +519,7 @@ export default function Home() {
           <div
             className="hero-blob"
             style={{
-              width: '75vw', height: '75vw',
-              left: '10vw', top: '-15vw',
+              width: '75vw', height: '75vw', left: '10vw', top: '-15vw',
               background: 'radial-gradient(circle, oklch(0.45 0.2 265) 0%, transparent 60%)',
               animation: 'blob-drift-c 12s ease-in-out infinite',
               opacity: 0.7,
@@ -550,8 +528,7 @@ export default function Home() {
           <div
             className="hero-blob"
             style={{
-              width: '55vw', height: '55vw',
-              left: '-5vw', top: '-25vw',
+              width: '55vw', height: '55vw', left: '-5vw', top: '-25vw',
               background: 'radial-gradient(circle, oklch(0.5 0.22 265) 0%, transparent 60%)',
               animation: 'blob-drift-a 10s ease-in-out infinite',
               opacity: 0.65,
@@ -560,23 +537,18 @@ export default function Home() {
           <div
             className="hero-blob"
             style={{
-              width: '50vw', height: '50vw',
-              right: '-5vw', top: '-20vw',
+              width: '50vw', height: '50vw', right: '-5vw', top: '-20vw',
               background: 'radial-gradient(circle, oklch(0.48 0.2 270) 0%, transparent 60%)',
               animation: 'blob-drift-b 13s ease-in-out infinite',
               opacity: 0.6,
             }}
           />
         </div>
-
-        {/* Fades gradient cleanly into solid black at page bottom */}
-        <div className="layer-footer-fade" />
       </div>
 
-      {/* ── Top Bar (untouched) ── */}
+      {/* ── Top Bar ── */}
       <header className="top-bar">
         <div className="logo" onClick={() => setScreen('home')}>Lumora.</div>
-
         <nav className="nav-links">
           {NAV_ITEMS.map(({ screen: s, label }) => {
             const isActive   = screen === s;
@@ -594,24 +566,23 @@ export default function Home() {
             );
           })}
         </nav>
-
         <div className="nav-right">
           <div className="search-pill">
-            <svg className="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="7" />
+            <svg className="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="8" />
               <path d="m21 21-4.3-4.3" />
             </svg>
-            <input className="search-input" placeholder="Search decks…" />
+            <input className="search-input" placeholder="Search" />
           </div>
           <span className="version-badge">Beta</span>
         </div>
       </header>
 
-      {/* ── Main Content ── */}
+      {/* ── Main ── */}
       <main className="main-wrap">
         <div className="inner">
-          {screen === 'home'     && <Upload onDeckCreated={addDeck} />}
-          {screen === 'decks'    && <Decks decks={decks} onPractice={startPractice} />}
+          {screen === 'home'     && <Upload onAdd={addDeck} />}
+          {screen === 'decks'    && <Decks decks={decks} onStart={startPractice} />}
           {screen === 'practice' && activeDeck && (
             <Practice
               deck={activeDeck}
@@ -626,13 +597,13 @@ export default function Home() {
         </div>
       </main>
 
-      {/* ── Footer (solid black) ── */}
+      {/* ── Footer (transparent — gradient continues behind it) ── */}
       <footer className="site-footer">
         <div className="footer-inner">
           <div>
             <div className="footer-logo">Lumora.</div>
             <div className="footer-tagline">
-              <TextGenerateEffect words="Spaced repetition, refined." />
+              <TextGenerateEffect words="Enhancing learning through spaced repetition." />
             </div>
           </div>
           <div className="footer-links">
