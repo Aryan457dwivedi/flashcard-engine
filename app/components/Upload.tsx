@@ -284,7 +284,7 @@ function CometFeatureCard({ title, desc }: { title: string; desc: string }): Rea
           fontWeight: 650,
           fontSize: '0.875rem',
           marginBottom: '0.45rem',
-          color: 'rgba(12,12,30,0.80)',
+          color: 'rgba(12,12,30,1)',
           position: 'relative',
           zIndex: 15,
           letterSpacing: '-0.015em',
@@ -292,7 +292,7 @@ function CometFeatureCard({ title, desc }: { title: string; desc: string }): Rea
           {title}
         </p>
         <p style={{
-          color: 'rgba(12,12,30,0.50)',
+          color: 'rgba(12,12,30,0.95)',
           fontSize: '0.79rem',
           lineHeight: '1.58',
           position: 'relative',
