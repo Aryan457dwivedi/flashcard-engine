@@ -507,14 +507,14 @@ const STYLES = `
 .streak-bar {
   display: inline-flex; align-items: center;
   font-size: 12.5px; font-weight: 600;
-  color: #0f0f1a; margin-bottom: 22px;
+  color: #fff; margin-bottom: 22px;
   animation: streak-in 0.35s cubic-bezier(0.22,1,0.36,1) forwards;
 }
 @keyframes streak-in {
-  0%   { opacity: 0; transform: translateY(-6px); color: #0f0f1a; }
+  0%   { opacity: 0; transform: translateY(-6px); color: #fff; }
   1%   { opacity: 1; transform: translateY(0);    color: #D97706; }
   40%  { color: #D97706; }
-  100% { opacity: 1; transform: translateY(0);    color: #0f0f1a; }
+  100% { opacity: 1; transform: translateY(0);    color: #fff; }
 }
 
 /* ── Stack wrapper (no ghost cards) ── */
