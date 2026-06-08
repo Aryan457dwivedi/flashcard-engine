@@ -564,9 +564,9 @@ const STYLES = `
   cursor: pointer; overflow: hidden;
   background: linear-gradient(
     135deg,
-    rgba(255,255,255,0.88) 0%,
-    rgba(245,244,255,0.78) 40%,
-    rgba(250,250,255,0.84) 100%
+    rgba(255,255,255,1) 0%,
+    rgba(245,244,255,1) 40%,
+    rgba(250,250,255,1) 100%
   );
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
@@ -583,9 +583,9 @@ const STYLES = `
 .card-shell.is-flipped {
   background: linear-gradient(
     135deg,
-    rgba(255,255,255,0.88) 0%,
-    rgba(245,244,255,0.78) 40%,
-    rgba(250,250,255,0.84) 100%
+    rgba(255,255,255,1) 0%,
+    rgba(245,244,255,1) 40%,
+    rgba(250,250,255,1) 100%
   );
   border-color: rgba(255,255,255,0.80);
   box-shadow:
