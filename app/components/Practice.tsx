@@ -494,7 +494,7 @@ const STYLES = `
 /* ── Progress ── */
 .progress-track {
   position: relative; height: 5px;
-  background: rgba(15,15,26,0.08);
+  background: rgba(255,255,255,0.25);
   border-radius: 999px; margin-bottom: 18px; overflow: visible;
 }
 .progress-fill {
