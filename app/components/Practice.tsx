@@ -481,15 +481,15 @@ const STYLES = `
 
 .deck-name {
   font-size: 13px; font-weight: 600;
-  color: #0f0f1a; letter-spacing: 0.01em;
+  color: rgba(180,180,190,0.85); letter-spacing: 0.01em;
   max-width: 200px; overflow: hidden;
   text-overflow: ellipsis; white-space: nowrap;
 }
 
 .counter-badge { display: flex; align-items: baseline; gap: 2px; font-family: 'Fraunces', Georgia, serif; }
-.counter-current { font-size: 20px; font-weight: 700; color: var(--text-primary); }
-.counter-sep { font-size: 14px; color: rgba(15,15,26,0.20); margin: 0 2px; }
-.counter-total { font-size: 14px; font-weight: 400; color: var(--text-secondary); }
+.counter-current { font-size: 20px; font-weight: 700; color: rgba(180,180,190,0.85); }
+.counter-sep { font-size: 14px; color: rgba(180,180,190,0.4); margin: 0 2px; }
+.counter-total { font-size: 14px; font-weight: 400; color: rgba(180,180,190,0.6); }
 
 /* ── Progress ── */
 .progress-track {
