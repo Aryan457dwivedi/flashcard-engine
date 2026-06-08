@@ -394,7 +394,7 @@ export default function Upload({ onDeckCreated }: { onDeckCreated: (deck: Deck) 
         .drop-zone-outer:hover,
         .drop-zone-outer.drag-active {
           border-color: #6366f1 !important;
-          background: rgba(99,102,241,0.04) !important;
+          background: #000 !important;
           box-shadow: 0 6px 32px rgba(99,102,241,0.12) !important;
         }
         .drop-zone-outer:hover .icon-card,
