@@ -451,7 +451,7 @@ export default function Upload({ onDeckCreated }: { onDeckCreated: (deck: Deck) 
           lineHeight: '1.1',
           letterSpacing: '-1px',
           marginBottom: '1.25rem',
-          color: '#1a1a2e',
+          color: '#fff',
         }}>
           <TextGenerateEffect words=".pdf to Smart Flashcards" duration={0.4} staggerDelay={0.10} />
           <br />
