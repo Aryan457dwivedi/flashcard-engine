@@ -468,7 +468,7 @@ export default function Upload({ onDeckCreated }: { onDeckCreated: (deck: Deck) 
           </span>
         </h1>
         <p style={{
-          color: 'rgba(26,26,46,0.5)',
+          color: 'rgba(180,180,190,0.75)',
           fontSize: '1.05rem',
           maxWidth: '480px',
           margin: '0 auto',
