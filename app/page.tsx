@@ -423,7 +423,7 @@ export default function Home() {
         .site-footer {
           position: relative;
           z-index: 1;
-          background: transparent;
+          background: #000;
           border-top: 1px solid rgba(255,255,255,0.08);
           padding: 32px 36px 28px;
           backdrop-filter: blur(20px);
